@@ -1,0 +1,5 @@
+{
+  "name": "Gespadel - Gestión de Torneos",
+  "description": "Aplicación web para la gestión de torneos de pádel amateur. Permite a los organizadores crear torneos, gestionar inscripciones y generar cuadros de juego.",
+  "requestFramePermissions": []
+}
