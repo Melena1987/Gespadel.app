@@ -13,6 +13,7 @@ import { MailIcon } from './icons/MailIcon';
 import { DocumentDownloadIcon } from './icons/DocumentDownloadIcon';
 import { CurrencyEuroIcon } from './icons/CurrencyEuroIcon';
 import { AddToCalendarButton } from './AddToCalendarButton';
+import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 
 interface TournamentDetailPageProps {
   tournament: Tournament;
@@ -125,9 +126,10 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tournament.clubName)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline hover:text-cyan-400 transition-colors"
+                        className="group inline-flex items-center gap-1 hover:underline hover:text-cyan-400 transition-colors"
                     >
-                        {tournament.clubName}
+                        <span>{tournament.clubName}</span>
+                        <ExternalLinkIcon className="h-3.5 w-3.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </a>
                 </div>
                 <div className="flex items-center gap-3"><CalendarIcon /> <span>{formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}</span></div>
@@ -144,49 +146,52 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 <p className="text-slate-400 whitespace-pre-line">{tournament.description}</p>
             </div>
 
-            <div className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-4">Categorías</h2>
-                <div className="space-y-4">
-                    {tournament.categories.masculine.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold text-cyan-400 mb-2">Masculinas</h3>
-                            <div className="flex flex-wrap gap-2">{tournament.categories.masculine.map(cat => <CategoryPill key={`m-${cat}`} category={cat} gender="masculine" />)}</div>
-                        </div>
-                    )}
-                     {tournament.categories.feminine.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold text-pink-400 mb-2">Femeninas</h3>
-                            <div className="flex flex-wrap gap-2">{tournament.categories.feminine.map(cat => <CategoryPill key={`f-${cat}`} category={cat} gender="feminine" />)}</div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {tournament.rulesPdfUrl && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="mb-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Reglamento</h2>
-                    <a 
-                        href={tournament.rulesPdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-3 px-5 py-2.5 font-semibold text-white bg-slate-700 rounded-lg shadow-md hover:bg-slate-600 transition-all"
-                    >
-                        <DocumentDownloadIcon />
-                        <span>Descargar Reglamento (PDF)</span>
-                    </a>
-                </div>
-            )}
-
-            <div>
-                <h2 className="text-xl font-bold text-white mb-4">Contacto de la Organización</h2>
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-slate-300">
-                        <PhoneIcon />
-                        <a href={`tel:${tournament.contactPhone}`} className="hover:text-cyan-400 transition-colors">{tournament.contactPhone}</a>
+                    <h2 className="text-xl font-bold text-white mb-4">Categorías</h2>
+                    <div className="space-y-4">
+                        {tournament.categories.masculine.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold text-cyan-400 mb-2">Masculinas</h3>
+                                <div className="flex flex-wrap gap-2">{tournament.categories.masculine.map(cat => <CategoryPill key={`m-${cat}`} category={cat} gender="masculine" />)}</div>
+                            </div>
+                        )}
+                        {tournament.categories.feminine.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold text-pink-400 mb-2">Femeninas</h3>
+                                <div className="flex flex-wrap gap-2">{tournament.categories.feminine.map(cat => <CategoryPill key={`f-${cat}`} category={cat} gender="feminine" />)}</div>
+                            </div>
+                        )}
                     </div>
-                    <div className="flex items-center gap-4 text-slate-300">
-                        <MailIcon />
-                        <a href={`mailto:${tournament.contactEmail}`} className="hover:text-cyan-400 transition-colors">{tournament.contactEmail}</a>
+                </div>
+                <div className="space-y-8">
+                    {tournament.rulesPdfUrl && (
+                        <div>
+                            <h2 className="text-xl font-bold text-white mb-4">Reglamento</h2>
+                            <a 
+                                href={tournament.rulesPdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-3 px-5 py-2.5 font-semibold text-white bg-slate-700 rounded-lg shadow-md hover:bg-slate-600 transition-all"
+                            >
+                                <DocumentDownloadIcon />
+                                <span>Descargar Reglamento (PDF)</span>
+                            </a>
+                        </div>
+                    )}
+
+                    <div>
+                        <h2 className="text-xl font-bold text-white mb-4">Contacto de la Organización</h2>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4 text-slate-300">
+                                <PhoneIcon />
+                                <a href={`tel:${tournament.contactPhone}`} className="hover:text-cyan-400 transition-colors">{tournament.contactPhone}</a>
+                            </div>
+                            <div className="flex items-center gap-4 text-slate-300">
+                                <MailIcon />
+                                <a href={`mailto:${tournament.contactEmail}`} className="hover:text-cyan-400 transition-colors">{tournament.contactEmail}</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

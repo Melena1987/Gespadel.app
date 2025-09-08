@@ -13,6 +13,7 @@ import { RegistrationsModal } from './RegistrationsModal';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { CurrencyEuroIcon } from './icons/CurrencyEuroIcon';
+import { ExternalLinkIcon } from './icons/ExternalLinkIcon';
 
 
 interface OrganizerDashboardProps {
@@ -108,9 +109,10 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.clubName)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="hover:underline hover:text-cyan-400 transition-colors"
+                                        className="group inline-flex items-center gap-1 hover:underline hover:text-cyan-400 transition-colors"
                                     >
-                                        {t.clubName}
+                                        <span>{t.clubName}</span>
+                                        <ExternalLinkIcon className="h-3.5 w-3.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     </a>
                                 </div>
                                 <div className="flex items-center gap-1.5"><CalendarIcon /> {formatDateRange(t.startDate, t.endDate)}</div>
