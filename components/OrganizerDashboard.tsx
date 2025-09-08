@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { Tournament, TournamentStatus, Registration, Player } from '../types';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
@@ -17,7 +18,7 @@ interface OrganizerDashboardProps {
   tournaments: Tournament[];
   registrations: Registration[];
   players: Player[];
-  onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
+  onCloseRegistrationsRequest: (tournamentId: string) => void;
   onCreateTournamentRequest: () => void;
   onEditTournament: (tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
@@ -38,7 +39,7 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onUpdateTournamentStatus, onCreateTournamentRequest, onEditTournament, onViewTournament, onViewPlayer, onDeleteRegistration }) => {
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onCloseRegistrationsRequest, onCreateTournamentRequest, onEditTournament, onViewTournament, onViewPlayer, onDeleteRegistration }) => {
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
   const handleViewRegistrations = (tournament: Tournament) => {
@@ -49,11 +50,6 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
     setViewingTournament(null);
   };
   
-  const handleCloseRegistrations = (tournamentId: string) => {
-    if (window.confirm('¿Estás seguro de que quieres cerrar las inscripciones para este torneo? Esta acción no se puede deshacer.')) {
-      onUpdateTournamentStatus(tournamentId, 'CLOSED');
-    }
-  };
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -112,7 +108,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                             <button onClick={() => onEditTournament(t)} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><PencilIcon /> Editar</button>
                             <button onClick={() => handleViewRegistrations(t)} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><ClipboardListIcon /> Inscripciones</button>
                             <button 
-                                onClick={() => handleCloseRegistrations(t.id)} 
+                                onClick={() => onCloseRegistrationsRequest(t.id)} 
                                 disabled={t.status !== 'OPEN'}
                                 className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors sm:col-span-2 lg:col-span-1 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
                             >

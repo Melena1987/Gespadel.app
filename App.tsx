@@ -15,6 +15,7 @@ import { PlayerProfileDetailModal } from './components/PlayerProfileDetailModal'
 import { TournamentForm } from './components/TournamentForm';
 import { useNotification } from './components/notifications/NotificationContext';
 import { NotificationContainer } from './components/notifications/NotificationContainer';
+import { ConfirmationModal } from './components/ConfirmationModal';
 
 type AppView = 'organizer' | 'player' | 'tournamentDetail';
 
@@ -40,6 +41,9 @@ const App: React.FC = () => {
     
     const [isTournamentFormOpen, setIsTournamentFormOpen] = useState(false);
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+
+    const [registrationToDelete, setRegistrationToDelete] = useState<string | null>(null);
+    const [tournamentToClose, setTournamentToClose] = useState<string | null>(null);
 
 
     useEffect(() => {
@@ -268,7 +272,13 @@ const App: React.FC = () => {
     };
 
     const handleUpdateTournamentStatus = async (tournamentId: string, newStatus: TournamentStatus) => {
-        await db.collection('tournaments').doc(tournamentId).update({ status: newStatus });
+        try {
+            await db.collection('tournaments').doc(tournamentId).update({ status: newStatus });
+            addNotification('Inscripciones cerradas correctamente.', 'success');
+        } catch (error) {
+             console.error("Error updating tournament status:", error);
+            addNotification("Error al cerrar inscripciones. Por favor, inténtalo de nuevo.", 'error');
+        }
     }
     
     const handleRegister = async (registrationData: any, tournament: Tournament) => {
@@ -328,16 +338,32 @@ const App: React.FC = () => {
         }
     };
     
-    const handleDeleteRegistration = async (registrationId: string) => {
-        if (window.confirm('¿Estás seguro de que quieres eliminar esta inscripción? Esta acción no se puede deshacer.')) {
-            try {
-                await db.collection('registrations').doc(registrationId).delete();
-                addNotification('Inscripción eliminada correctamente.', 'success');
-            } catch (error) {
-                console.error("Error al eliminar la inscripción:", error);
-                addNotification("Error al eliminar la inscripción. Por favor, inténtalo de nuevo.", 'error');
-            }
+    const handleDeleteRegistration = (registrationId: string) => {
+        setRegistrationToDelete(registrationId);
+    };
+
+    const confirmDeleteRegistration = async () => {
+        if (!registrationToDelete) return;
+
+        try {
+            await db.collection('registrations').doc(registrationToDelete).delete();
+            addNotification('Inscripción eliminada correctamente.', 'success');
+        } catch (error) {
+            console.error("Error al eliminar la inscripción:", error);
+            addNotification("Error al eliminar la inscripción. Por favor, inténtalo de nuevo.", 'error');
+        } finally {
+            setRegistrationToDelete(null);
         }
+    };
+
+    const requestCloseRegistrations = (tournamentId: string) => {
+        setTournamentToClose(tournamentId);
+    };
+
+    const confirmCloseRegistrations = async () => {
+        if (!tournamentToClose) return;
+        await handleUpdateTournamentStatus(tournamentToClose, 'CLOSED');
+        setTournamentToClose(null);
     };
 
     const handleViewTournament = (tournamentId: string) => {
@@ -388,7 +414,7 @@ const App: React.FC = () => {
                     tournaments={tournaments}
                     registrations={registrations}
                     players={allPlayers}
-                    onUpdateTournamentStatus={handleUpdateTournamentStatus}
+                    onCloseRegistrationsRequest={requestCloseRegistrations}
                     onCreateTournamentRequest={handleOpenCreateForm}
                     onEditTournament={handleOpenEditForm}
                     onViewTournament={handleViewTournament}
@@ -458,6 +484,26 @@ const App: React.FC = () => {
                     initialData={editingTournament}
                 />
             </Modal>
+
+            <ConfirmationModal
+                isOpen={!!registrationToDelete}
+                onClose={() => setRegistrationToDelete(null)}
+                onConfirm={confirmDeleteRegistration}
+                title="Confirmar Anulación"
+                message="¿Estás seguro de que quieres anular esta inscripción? Esta acción no se puede deshacer."
+                confirmText="Anular Inscripción"
+                confirmButtonClass="bg-red-600 hover:bg-red-700"
+            />
+            
+            <ConfirmationModal
+                isOpen={!!tournamentToClose}
+                onClose={() => setTournamentToClose(null)}
+                onConfirm={confirmCloseRegistrations}
+                title="Confirmar Cierre de Inscripciones"
+                message="¿Estás seguro de que quieres cerrar las inscripciones para este torneo? Esta acción no se puede deshacer."
+                confirmText="Cerrar Inscripciones"
+                confirmButtonClass="bg-orange-600 hover:bg-orange-700"
+            />
         </div>
     );
 };
