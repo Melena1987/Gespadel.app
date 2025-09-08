@@ -22,8 +22,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onS
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-          alert('La imagen es demasiado grande. El tamaño máximo es 2MB.');
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          alert('La imagen es demasiado grande. El tamaño máximo es 5MB.');
           return;
       }
       setProfilePictureFile(file);
@@ -57,7 +57,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onS
         </div>
         <label htmlFor="picture-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2 px-4 rounded-md text-sm transition-colors">
             <span>Cambiar foto</span>
-            <input id="picture-upload" name="picture-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/webp" />
+            <input id="picture-upload" name="picture-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/webp, image/gif" />
         </label>
       </div>
 

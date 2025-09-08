@@ -70,8 +70,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert('La imagen es demasiado grande. El tamaño máximo es 5MB.');
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert('La imagen es demasiado grande. El tamaño máximo es 10MB.');
         return;
       }
       setPosterImageFile(file);
@@ -227,7 +227,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
           )}
           <label htmlFor="poster-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2 px-4 rounded-md transition-colors">
             <span>Subir imagen</span>
-            <input id="poster-upload" name="poster-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/webp" />
+            <input id="poster-upload" name="poster-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/webp, image/gif" />
           </label>
         </div>
       </div>
