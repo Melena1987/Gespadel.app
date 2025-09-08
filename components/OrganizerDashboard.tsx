@@ -23,7 +23,7 @@ interface OrganizerDashboardProps {
   onEditTournament: (tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
   onViewPlayer: (playerId: string) => void;
-  onDeleteRegistration: (registrationId: string) => void;
+  onCancelRegistration: (registrationId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -39,7 +39,7 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onCloseRegistrationsRequest, onCreateTournamentRequest, onEditTournament, onViewTournament, onViewPlayer, onDeleteRegistration }) => {
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onCloseRegistrationsRequest, onCreateTournamentRequest, onEditTournament, onViewTournament, onViewPlayer, onCancelRegistration }) => {
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
   const handleViewRegistrations = (tournament: Tournament) => {
@@ -75,7 +75,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
         <h2 className="text-2xl font-semibold mb-6">Mis Torneos</h2>
         <div className="space-y-4">
             {tournaments.map(t => {
-                const registrationCount = registrations.filter(r => r.tournamentId === t.id).length;
+                const registrationCount = registrations.filter(r => r.tournamentId === t.id && r.status !== 'CANCELLED').length;
                 return (
                     <div key={t.id} className="bg-slate-800/50 rounded-xl p-4 ring-1 ring-white/10 flex flex-col sm:flex-row items-center gap-5">
                         <div className="flex-shrink-0 w-full sm:w-32 h-32 sm:h-20">
@@ -130,7 +130,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                 players={players}
                 onClose={handleCloseRegistrationsModal}
                 onViewPlayer={onViewPlayer}
-                onDeleteRegistration={onDeleteRegistration}
+                onCancelRegistration={onCancelRegistration}
             />
         </Modal>
       )}

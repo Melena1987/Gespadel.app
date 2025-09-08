@@ -15,7 +15,7 @@ interface PlayerDashboardProps {
   onRegister: (registrationData: any, tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
   onLoginRequest: () => void;
-  onDeleteRegistration: (registrationId: string) => void;
+  onCancelRegistration: (registrationId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -38,9 +38,9 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
     onRegister,
     onViewTournament,
     onLoginRequest,
-    onDeleteRegistration,
+    onCancelRegistration,
 }) => {
-  const defaultTab = player && registrations.some(r => r.player1Id === player.id) ? 'registrations' : 'search';
+  const defaultTab = player && registrations.some(r => r.player1Id === player.id && r.status !== 'CANCELLED') ? 'registrations' : 'search';
   const [activeTab, setActiveTab] = useState<'registrations' | 'search'>(defaultTab);
   
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
@@ -64,7 +64,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
     setActiveTab('registrations');
   };
   
-  const registeredTournamentIds = new Set(registrations.filter(r => player && r.player1Id === player.id).map(r => r.tournamentId));
+  const registeredTournamentIds = new Set(registrations.filter(r => player && r.player1Id === player.id && r.status !== 'CANCELLED').map(r => r.tournamentId));
   const registeredTournaments = tournaments.filter(t => registeredTournamentIds.has(t.id));
   const availableTournaments = tournaments.filter(t => !registeredTournamentIds.has(t.id));
   
@@ -99,7 +99,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournamentsToShow.map(t => {
-              const registration = activeTab === 'registrations' && player ? registrations.find(r => r.tournamentId === t.id && r.player1Id === player.id) : null;
+              const registration = activeTab === 'registrations' && player ? registrations.find(r => r.tournamentId === t.id && r.player1Id === player.id && r.status !== 'CANCELLED') : null;
               return (
                 <div key={t.id} className="bg-slate-800/50 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-violet-500/10">
                   {t.posterImage ? (
@@ -138,7 +138,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                             {activeTab === 'registrations' && registration ? (
                                 t.status === 'OPEN' ? (
                                 <button
-                                    onClick={() => onDeleteRegistration(registration.id)}
+                                    onClick={() => onCancelRegistration(registration.id)}
                                     className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-red-600 hover:bg-red-700"
                                 >
                                     Anular Inscripción

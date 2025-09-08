@@ -69,4 +69,5 @@ export interface Registration {
     gender: 'masculine' | 'feminine';
     registrationDate: string;
     timePreferences?: TimeSlot[];
+    status?: 'ACTIVE' | 'CANCELLED';
 }

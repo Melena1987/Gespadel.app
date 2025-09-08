@@ -42,7 +42,7 @@ const App: React.FC = () => {
     const [isTournamentFormOpen, setIsTournamentFormOpen] = useState(false);
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
 
-    const [registrationToDelete, setRegistrationToDelete] = useState<string | null>(null);
+    const [registrationToCancel, setRegistrationToCancel] = useState<string | null>(null);
     const [tournamentToClose, setTournamentToClose] = useState<string | null>(null);
 
 
@@ -295,6 +295,7 @@ const App: React.FC = () => {
                 tournamentId: tournament.id,
                 player1Id: player.id,
                 registrationDate: new Date().toISOString(),
+                status: 'ACTIVE',
             };
     
             // Handle player 2
@@ -338,21 +339,21 @@ const App: React.FC = () => {
         }
     };
     
-    const handleDeleteRegistration = (registrationId: string) => {
-        setRegistrationToDelete(registrationId);
+    const handleCancelRegistrationRequest = (registrationId: string) => {
+        setRegistrationToCancel(registrationId);
     };
 
-    const confirmDeleteRegistration = async () => {
-        if (!registrationToDelete) return;
+    const confirmCancelRegistration = async () => {
+        if (!registrationToCancel) return;
 
         try {
-            await db.collection('registrations').doc(registrationToDelete).delete();
-            addNotification('Inscripción eliminada correctamente.', 'success');
+            await db.collection('registrations').doc(registrationToCancel).update({ status: 'CANCELLED' });
+            addNotification('Inscripción anulada correctamente.', 'success');
         } catch (error) {
-            console.error("Error al eliminar la inscripción:", error);
-            addNotification("Error al eliminar la inscripción. Por favor, inténtalo de nuevo.", 'error');
+            console.error("Error al anular la inscripción:", error);
+            addNotification("Error al anular la inscripción. Por favor, inténtalo de nuevo.", 'error');
         } finally {
-            setRegistrationToDelete(null);
+            setRegistrationToCancel(null);
         }
     };
 
@@ -402,7 +403,7 @@ const App: React.FC = () => {
                     registrations={registrations}
                     onRegister={handleRegister}
                     onLoginRequest={() => handleLoginRequest('player')}
-                    onDeleteRegistration={handleDeleteRegistration}
+                    onCancelRegistration={handleCancelRegistrationRequest}
                 />
             );
         }
@@ -419,7 +420,7 @@ const App: React.FC = () => {
                     onEditTournament={handleOpenEditForm}
                     onViewTournament={handleViewTournament}
                     onViewPlayer={handleViewPlayerProfile}
-                    onDeleteRegistration={handleDeleteRegistration}
+                    onCancelRegistration={handleCancelRegistrationRequest}
                 />
             );
         }
@@ -433,7 +434,7 @@ const App: React.FC = () => {
                 onRegister={handleRegister}
                 onViewTournament={handleViewTournament}
                 onLoginRequest={() => handleLoginRequest('player')}
-                onDeleteRegistration={handleDeleteRegistration}
+                onCancelRegistration={handleCancelRegistrationRequest}
             />
         );
     }
@@ -486,9 +487,9 @@ const App: React.FC = () => {
             </Modal>
 
             <ConfirmationModal
-                isOpen={!!registrationToDelete}
-                onClose={() => setRegistrationToDelete(null)}
-                onConfirm={confirmDeleteRegistration}
+                isOpen={!!registrationToCancel}
+                onClose={() => setRegistrationToCancel(null)}
+                onConfirm={confirmCancelRegistration}
                 title="Confirmar Anulación"
                 message="¿Estás seguro de que quieres anular esta inscripción? Esta acción no se puede deshacer."
                 confirmText="Anular Inscripción"

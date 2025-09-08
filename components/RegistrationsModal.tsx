@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { Tournament, Registration, Player, Category } from '../types';
 import { UsersIcon } from './icons/UsersIcon';
@@ -10,7 +11,7 @@ interface RegistrationsModalProps {
   players: Player[];
   onClose: () => void;
   onViewPlayer: (playerId: string) => void;
-  onDeleteRegistration: (registrationId: string) => void;
+  onCancelRegistration: (registrationId: string) => void;
 }
 
 type GroupedRegistrations = {
@@ -19,7 +20,7 @@ type GroupedRegistrations = {
   };
 };
 
-export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tournament, registrations, players, onClose, onViewPlayer, onDeleteRegistration }) => {
+export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tournament, registrations, players, onClose, onViewPlayer, onCancelRegistration }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   const toggleCategory = (key: string) => {
@@ -65,13 +66,14 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
                   const player1 = players.find(p => p.id === reg.player1Id);
                   const player2 = reg.player2Id ? players.find(p => p.id === reg.player2Id) : null;
                   const player2Name = player2 ? player2.name : reg.player2Name;
+                  const isCancelled = reg.status === 'CANCELLED';
 
                   return (
-                    <li key={reg.id} className="flex items-center bg-slate-700/50 p-2 rounded-lg">
+                    <li key={reg.id} className={`flex items-center bg-slate-700/50 p-2 rounded-lg ${isCancelled ? 'opacity-60' : ''}`}>
                       <span className="text-sm font-mono text-slate-500 mr-3">{index + 1}.</span>
-                      <div className="flex-grow text-slate-200 text-sm">
+                      <div className={`flex-grow text-sm ${isCancelled ? 'text-slate-400 line-through' : 'text-slate-200'}`}>
                         {player1 ? (
-                          <button onClick={() => onViewPlayer(player1.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left">
+                          <button onClick={() => onViewPlayer(player1.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left disabled:no-underline disabled:hover:text-slate-400 disabled:cursor-default" disabled={isCancelled}>
                             {player1.name}
                           </button>
                         ) : 'Jugador no encontrado'}
@@ -79,7 +81,7 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
                           <>
                             <span className="text-slate-500 mx-1">/</span>
                             {player2 ? (
-                                <button onClick={() => onViewPlayer(player2.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left">
+                                <button onClick={() => onViewPlayer(player2.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left disabled:no-underline disabled:hover:text-slate-400 disabled:cursor-default" disabled={isCancelled}>
                                   {player2.name}
                                 </button>
                             ) : (
@@ -88,15 +90,19 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
                           </>
                         )}
                       </div>
-                       {tournament.status === 'OPEN' && (
-                        <button
-                          onClick={() => onDeleteRegistration(reg.id)}
-                          className="ml-4 p-1.5 text-slate-400 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-colors"
-                          aria-label="Eliminar inscripción"
-                        >
-                          <TrashIcon />
-                        </button>
-                      )}
+                       {isCancelled ? (
+                         <span className="ml-4 text-xs font-semibold text-red-400 bg-red-500/20 px-2 py-1 rounded-full">ANULADA</span>
+                       ) : (
+                         tournament.status === 'OPEN' && (
+                            <button
+                              onClick={() => onCancelRegistration(reg.id)}
+                              className="ml-4 p-1.5 text-slate-400 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-colors"
+                              aria-label="Anular inscripción"
+                            >
+                              <TrashIcon />
+                            </button>
+                          )
+                       )}
                     </li>
                   );
                 })}
