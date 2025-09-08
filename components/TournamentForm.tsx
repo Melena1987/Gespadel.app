@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import type { Tournament, Category } from '../types';
 import { ALL_CATEGORIES } from '../constants';
 import { DocumentTextIcon } from './icons/DocumentTextIcon';
 import { TrashIcon } from './icons/TrashIcon';
+import { useNotification } from './notifications/NotificationContext';
 
 interface TournamentFormProps {
   onSubmit: (data: Omit<Tournament, 'id' | 'status' | 'posterImage' | 'rulesPdfUrl'> & { posterImageFile?: File | null; rulesPdfFile?: File | null; removeRulesPdf?: boolean; }) => void;
@@ -11,6 +13,7 @@ interface TournamentFormProps {
 }
 
 export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCancel, initialData }) => {
+  const { addNotification } = useNotification();
   const isEditing = !!initialData;
   const [name, setName] = useState('');
   const [clubName, setClubName] = useState('');
@@ -82,7 +85,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        alert('La imagen es demasiado grande. El tamaño máximo es 10MB.');
+        addNotification('La imagen es demasiado grande. El tamaño máximo es 10MB.', 'error');
         return;
       }
       setPosterImageFile(file);
@@ -98,12 +101,12 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
     const file = e.target.files?.[0];
     if (file) {
       if (file.type !== 'application/pdf') {
-        alert('Por favor, sube solo archivos PDF.');
+        addNotification('Por favor, sube solo archivos PDF.', 'error');
         e.target.value = '';
         return;
       }
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert('El archivo PDF es demasiado grande. El tamaño máximo es 5MB.');
+        addNotification('El archivo PDF es demasiado grande. El tamaño máximo es 5MB.', 'error');
         e.target.value = '';
         return;
       }
@@ -140,7 +143,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         removeRulesPdf,
       });
     } else {
-      alert('Por favor, completa todos los campos requeridos (nombre, club, descripción, contacto, fechas y al menos una categoría).');
+      addNotification('Por favor, completa todos los campos requeridos.', 'error');
     }
   };
 

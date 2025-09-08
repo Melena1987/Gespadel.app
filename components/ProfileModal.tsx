@@ -1,8 +1,10 @@
+
 // Fix: Create file content for ProfileModal.tsx
 import React, { useState } from 'react';
 import type { Player, Category } from '../types';
 import { ALL_CATEGORIES } from '../constants';
 import { ProfilePicturePlaceholder } from './icons/ProfilePicturePlaceholder';
+import { useNotification } from './notifications/NotificationContext';
 
 interface ProfileModalProps {
   player: Player;
@@ -11,6 +13,7 @@ interface ProfileModalProps {
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onSave }) => {
+  const { addNotification } = useNotification();
   const [name, setName] = useState(player.name);
   const [email, setEmail] = useState(player.email);
   const [phone, setPhone] = useState(player.phone);
@@ -23,7 +26,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onS
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-          alert('La imagen es demasiado grande. El tamaño máximo es 5MB.');
+          addNotification('La imagen es demasiado grande. El tamaño máximo es 5MB.', 'error');
           return;
       }
       setProfilePictureFile(file);

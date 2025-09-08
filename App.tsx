@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 // Fix: Import firebase to provide type for 'user' state.
 import firebase from 'firebase/compat/app';
@@ -12,10 +13,13 @@ import { Header } from './components/Header';
 import { Modal } from './components/Modal';
 import { PlayerProfileDetailModal } from './components/PlayerProfileDetailModal';
 import { TournamentForm } from './components/TournamentForm';
+import { useNotification } from './components/notifications/NotificationContext';
+import { NotificationContainer } from './components/notifications/NotificationContainer';
 
 type AppView = 'organizer' | 'player' | 'tournamentDetail';
 
 const App: React.FC = () => {
+    const { addNotification } = useNotification();
     const [user, setUser] = useState<firebase.User | null>(null);
     const [player, setPlayer] = useState<Player | null>(null);
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -154,10 +158,10 @@ const App: React.FC = () => {
             await db.collection('players').doc(user.uid).set(finalPlayer, { merge: true });
             setPlayer(finalPlayer);
             setIsProfileModalOpen(false);
-            alert('Perfil actualizado correctamente.');
+            addNotification('Perfil actualizado correctamente.', 'success');
         } catch (error) {
             console.error("Error al guardar el perfil:", error);
-            alert("Error al guardar el perfil. Por favor, inténtalo de nuevo.");
+            addNotification("Error al guardar el perfil. Por favor, inténtalo de nuevo.", 'error');
         }
     };
     
@@ -191,10 +195,10 @@ const App: React.FC = () => {
             };
 
             await newTournamentRef.set(newTournament);
-            alert('Torneo creado con éxito.');
+            addNotification('Torneo creado con éxito.', 'success');
         } catch (error) {
             console.error("Error al crear el torneo:", error);
-            alert("Error al crear el torneo. Por favor, inténtalo de nuevo.");
+            addNotification("Error al crear el torneo. Por favor, inténtalo de nuevo.", 'error');
         }
     };
     
@@ -232,10 +236,10 @@ const App: React.FC = () => {
             };
 
             await db.collection('tournaments').doc(tournamentId).update(updatedTournament);
-            alert('Torneo actualizado con éxito.');
+            addNotification('Torneo actualizado con éxito.', 'success');
         } catch (error) {
             console.error("Error al actualizar el torneo:", error);
-            alert("Error al actualizar el torneo. Por favor, inténtalo de nuevo.");
+            addNotification("Error al actualizar el torneo. Por favor, inténtalo de nuevo.", 'error');
         }
     };
     
@@ -269,7 +273,7 @@ const App: React.FC = () => {
     
     const handleRegister = async (registrationData: any, tournament: Tournament) => {
         if (!player) {
-            alert("Debes iniciar sesión para inscribirte.");
+            addNotification("Debes iniciar sesión para inscribirte.", 'info');
             return;
         }
     
@@ -288,7 +292,7 @@ const App: React.FC = () => {
                 // If email is provided, create/find player and add player2Id
                 if (player2.email) {
                     if (player2.email === player.email) {
-                        alert("No puedes inscribirte a ti mismo como tu compañero/a.");
+                        addNotification("No puedes inscribirte a ti mismo como tu compañero/a.", 'error');
                         return;
                     }
     
@@ -317,10 +321,10 @@ const App: React.FC = () => {
             }
     
             await db.collection('registrations').add(newRegistrationData);
-            alert('¡Inscripción realizada con éxito!');
+            addNotification('¡Inscripción realizada con éxito!', 'success');
         } catch (error) {
             console.error("Error al realizar la inscripción:", error);
-            alert("Ha ocurrido un error al guardar la inscripción. Por favor, inténtalo de nuevo.");
+            addNotification("Ha ocurrido un error al guardar la inscripción. Por favor, inténtalo de nuevo.", 'error');
         }
     };
     
@@ -328,10 +332,10 @@ const App: React.FC = () => {
         if (window.confirm('¿Estás seguro de que quieres eliminar esta inscripción? Esta acción no se puede deshacer.')) {
             try {
                 await db.collection('registrations').doc(registrationId).delete();
-                alert('Inscripción eliminada correctamente.');
+                addNotification('Inscripción eliminada correctamente.', 'success');
             } catch (error) {
                 console.error("Error al eliminar la inscripción:", error);
-                alert("Error al eliminar la inscripción. Por favor, inténtalo de nuevo.");
+                addNotification("Error al eliminar la inscripción. Por favor, inténtalo de nuevo.", 'error');
             }
         }
     };
@@ -410,6 +414,7 @@ const App: React.FC = () => {
 
     return (
         <div className="bg-slate-900 text-slate-200 min-h-screen font-sans">
+            <NotificationContainer />
             <Header
                 player={player}
                 onLoginRequest={handleLoginRequest}
