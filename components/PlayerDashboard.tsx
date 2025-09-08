@@ -6,6 +6,7 @@ import { RegistrationModal } from './RegistrationModal';
 import { LocationIcon } from './icons/LocationIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
+import { ShareButton } from './ShareButton';
 
 interface PlayerDashboardProps {
   tournaments: Tournament[];
@@ -132,32 +133,35 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                         </div>
                       )}
                     <p className="text-sm text-slate-400 mb-4 flex-grow">{t.description}</p>
-                    <div className="mt-auto">
-                        {activeTab === 'registrations' && registration ? (
-                            t.status === 'OPEN' ? (
-                            <button
-                                onClick={() => onDeleteRegistration(registration.id)}
-                                className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-red-600 hover:bg-red-700"
-                            >
-                                Anular Inscripción
-                            </button>
+                    <div className="mt-auto flex items-center gap-3">
+                        <div className="flex-grow">
+                            {activeTab === 'registrations' && registration ? (
+                                t.status === 'OPEN' ? (
+                                <button
+                                    onClick={() => onDeleteRegistration(registration.id)}
+                                    className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-red-600 hover:bg-red-700"
+                                >
+                                    Anular Inscripción
+                                </button>
+                                ) : (
+                                <button
+                                    disabled
+                                    className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all bg-slate-700 text-slate-400 cursor-not-allowed"
+                                >
+                                    Inscrito
+                                </button>
+                                )
                             ) : (
-                            <button
-                                disabled
-                                className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all bg-slate-700 text-slate-400 cursor-not-allowed"
-                            >
-                                Inscrito
-                            </button>
-                            )
-                        ) : (
-                            <button
-                            onClick={() => handleRegisterClick(t)}
-                            disabled={t.status !== 'OPEN'}
-                            className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-violet-600 hover:bg-violet-700 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400"
-                            >
-                            {t.status === 'OPEN' ? 'Inscribirme' : 'Inscripciones cerradas'}
-                            </button>
-                        )}
+                                <button
+                                onClick={() => handleRegisterClick(t)}
+                                disabled={t.status !== 'OPEN'}
+                                className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-violet-600 hover:bg-violet-700 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400"
+                                >
+                                {t.status === 'OPEN' ? 'Inscribirme' : 'Inscripciones cerradas'}
+                                </button>
+                            )}
+                        </div>
+                        <ShareButton tournament={t} />
                     </div>
                   </div>
                 </div>

@@ -7,7 +7,7 @@ import { UsersIcon } from './icons/UsersIcon';
 import { Modal } from './Modal';
 import { RegistrationModal } from './RegistrationModal';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
-import { ShareIcon } from './icons/ShareIcon';
+import { ShareButton } from './ShareButton';
 
 interface TournamentDetailPageProps {
   tournament: Tournament;
@@ -40,8 +40,7 @@ const CategoryPill: React.FC<{category: Category, gender: 'masculine' | 'feminin
 
 export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tournament, onBack, player, registrations, onRegister, onLoginRequest, onDeleteRegistration }) => {
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
-  const [shareFeedback, setShareFeedback] = useState('');
-
+  
   const registrationCount = registrations.filter(r => r.tournamentId === tournament.id).length;
   const registration = player ? registrations.find(r => r.tournamentId === tournament.id && r.player1Id === player.id) : null;
   const isRegistered = !!registration;
@@ -59,27 +58,6 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
       onLoginRequest();
     } else {
       setIsRegistrationModalOpen(true);
-    }
-  };
-
-  const handleShare = async () => {
-    const shareUrl = window.location.href;
-    const shareData = { title: tournament.name, text: `${tournament.description}\n\n¡Inscríbete aquí!`, url: shareUrl };
-
-    if (navigator.share) {
-        try {
-            await navigator.share(shareData);
-        } catch (error) { console.error('Error al compartir:', error); }
-    } else {
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            setShareFeedback('¡Enlace copiado al portapapeles!');
-            setTimeout(() => setShareFeedback(''), 3000);
-        } catch (error) {
-            console.error('Error al copiar el enlace:', error);
-            setShareFeedback('No se pudo copiar el enlace.');
-            setTimeout(() => setShareFeedback(''), 3000);
-        }
     }
   };
 
@@ -102,32 +80,30 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 </div>
             )}
             
-            <div className="space-y-4">
-              {isRegistered && registration ? (
-                  tournament.status === 'OPEN' ? (
-                      <button 
-                          onClick={() => onDeleteRegistration(registration.id)}
-                          className="w-full px-6 py-3 font-semibold text-lg text-white bg-red-600 rounded-lg shadow-md hover:bg-red-700 transition-all"
-                      >
-                          Anular Inscripción
-                      </button>
-                  ) : (
-                      <div className="flex items-center justify-center gap-2 w-full px-6 py-3 font-semibold text-lg bg-green-500/20 text-green-300 rounded-lg shadow-md">
-                          <CheckCircleIcon />
-                          <span>Inscrito</span>
-                      </div>
-                  )
-              ) : (
-                  <button onClick={handleRegisterClick} disabled={!canRegister} className="w-full px-6 py-3 font-semibold text-lg text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition-all disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400">
-                      {tournament.status === 'OPEN' ? 'Inscribirme Ahora' : 'Inscripciones Cerradas'}
-                  </button>
-              )}
-              <button onClick={handleShare} className="w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold text-lg bg-slate-700 text-slate-200 rounded-lg shadow-md hover:bg-slate-600 transition-all" aria-label="Compartir torneo">
-                <ShareIcon />
-                <span>Compartir</span>
-              </button>
+            <div className="flex items-stretch gap-3">
+              <div className="flex-grow">
+                {isRegistered && registration ? (
+                    tournament.status === 'OPEN' ? (
+                        <button 
+                            onClick={() => onDeleteRegistration(registration.id)}
+                            className="w-full h-full px-6 py-3 font-semibold text-lg text-white bg-red-600 rounded-lg shadow-md hover:bg-red-700 transition-all"
+                        >
+                            Anular Inscripción
+                        </button>
+                    ) : (
+                        <div className="h-full flex items-center justify-center gap-2 w-full px-6 py-3 font-semibold text-lg bg-green-500/20 text-green-300 rounded-lg shadow-md">
+                            <CheckCircleIcon />
+                            <span>Inscrito</span>
+                        </div>
+                    )
+                ) : (
+                    <button onClick={handleRegisterClick} disabled={!canRegister} className="w-full h-full px-6 py-3 font-semibold text-lg text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition-all disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400">
+                        {tournament.status === 'OPEN' ? 'Inscribirme Ahora' : 'Inscripciones Cerradas'}
+                    </button>
+                )}
+              </div>
+              <ShareButton tournament={tournament} className="px-4 text-lg" />
             </div>
-             {shareFeedback && (<p className="text-center text-sm text-green-400 transition-opacity duration-300" role="status">{shareFeedback}</p>)}
         </div>
 
         <div className="md:col-span-2">
