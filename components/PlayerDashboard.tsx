@@ -8,6 +8,7 @@ import { CalendarIcon } from './icons/CalendarIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { ShareButton } from './ShareButton';
 import { CurrencyEuroIcon } from './icons/CurrencyEuroIcon';
+import { AddToCalendarButton } from './AddToCalendarButton';
 
 interface PlayerDashboardProps {
   tournaments: Tournament[];
@@ -171,6 +172,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                                 </button>
                             )}
                         </div>
+                        {activeTab === 'registrations' && <AddToCalendarButton tournament={t} />}
                         <ShareButton tournament={t} />
                     </div>
                   </div>

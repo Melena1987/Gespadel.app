@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { Tournament, Player, Registration, Category } from '../types';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
@@ -13,6 +12,7 @@ import { PhoneIcon } from './icons/PhoneIcon';
 import { MailIcon } from './icons/MailIcon';
 import { DocumentDownloadIcon } from './icons/DocumentDownloadIcon';
 import { CurrencyEuroIcon } from './icons/CurrencyEuroIcon';
+import { AddToCalendarButton } from './AddToCalendarButton';
 
 interface TournamentDetailPageProps {
   tournament: Tournament;
@@ -107,6 +107,7 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                     </button>
                 )}
               </div>
+              {isRegistered && <AddToCalendarButton tournament={tournament} className="px-4" />}
               <ShareButton tournament={tournament} className="px-4 text-lg" />
             </div>
         </div>
