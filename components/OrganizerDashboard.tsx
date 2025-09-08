@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { MOCK_TOURNAMENTS, TOURNAMENT_MODEL, PLAYER_MODEL, REGISTRATION_MODEL } from '../constants';
-import type { Tournament } from '../types';
+import { MOCK_REGISTRATIONS, MOCK_PLAYERS } from '../constants';
+import type { Tournament, TournamentStatus } from '../types';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { Modal } from './Modal';
 import { TournamentForm } from './TournamentForm';
-import { DataModelTable } from './DataModelTable';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { LocationIcon } from './icons/LocationIcon';
 import { UsersIcon } from './icons/UsersIcon';
 import { ClipboardListIcon } from './icons/ClipboardListIcon';
 import { LockClosedIcon } from './icons/LockClosedIcon';
+import { RegistrationsModal } from './RegistrationsModal';
 
 
 interface OrganizerDashboardProps {
   onBack: () => void;
+  tournaments: Tournament[];
+  onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
+  onCreateTournament: (data: Omit<Tournament, 'id' | 'status'>) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -30,18 +33,27 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack }) => {
-  const [tournaments, setTournaments] = useState<Tournament[]>(MOCK_TOURNAMENTS);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, onUpdateTournamentStatus, onCreateTournament }) => {
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
   const handleCreateTournament = (data: Omit<Tournament, 'id' | 'status'>) => {
-    const newTournament: Tournament = {
-      id: `t${tournaments.length + 1}`,
-      status: 'OPEN',
-      ...data,
-    };
-    setTournaments(prev => [newTournament, ...prev]);
-    setIsModalOpen(false);
+    onCreateTournament(data);
+    setIsFormModalOpen(false);
+  };
+
+  const handleViewRegistrations = (tournament: Tournament) => {
+    setViewingTournament(tournament);
+  };
+
+  const handleCloseRegistrationsModal = () => {
+    setViewingTournament(null);
+  };
+  
+  const handleCloseRegistrations = (tournamentId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres cerrar las inscripciones para este torneo? Esta acción no se puede deshacer.')) {
+      onUpdateTournamentStatus(tournamentId, 'CLOSED');
+    }
   };
 
   return (
@@ -56,7 +68,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack }
             </h1>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsFormModalOpen(true)}
           className="flex items-center justify-center gap-2 px-5 py-2.5 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all w-full sm:w-auto"
         >
           <PlusIcon />
@@ -67,43 +79,66 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack }
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-6">Mis Torneos</h2>
         <div className="space-y-4">
-            {tournaments.map(t => (
-                <div key={t.id} className="bg-slate-800/50 rounded-xl p-5 ring-1 ring-white/10 flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex-grow">
-                        <div className="flex items-center gap-4">
-                           <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${statusStyles[t.status]}`}>{t.status}</span>
-                           <h3 className="text-lg font-bold text-white">{t.name}</h3>
+            {tournaments.map(t => {
+                const registrationCount = MOCK_REGISTRATIONS.filter(r => r.tournamentId === t.id).length;
+                return (
+                    <div key={t.id} className="bg-slate-800/50 rounded-xl p-4 ring-1 ring-white/10 flex flex-col sm:flex-row items-center gap-5">
+                        <div className="flex-shrink-0 w-full sm:w-32 h-32 sm:h-20">
+                            {t.posterImage ? (
+                            <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="w-full h-full object-cover rounded-lg"/>
+                            ) : (
+                            <div className="w-full h-full bg-slate-900/75 rounded-lg flex items-center justify-center">
+                                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
+                                        GESPADEL
+                                    </span>
+                            </div>
+                            )}
                         </div>
-                        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-2 text-sm text-slate-400">
-                            <div className="flex items-center gap-1.5"><LocationIcon /> {t.clubName}</div>
-                            <div className="flex items-center gap-1.5"><CalendarIcon /> {formatDateRange(t.startDate, t.endDate)}</div>
-                            <div className="flex items-center gap-1.5"><UsersIcon /> {t.categories.masculine.length + t.categories.feminine.length} categorías</div>
+                        <div className="flex-grow w-full">
+                            <div className="flex items-center gap-4 mb-2">
+                            <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${statusStyles[t.status]}`}>{t.status}</span>
+                            <h3 className="text-lg font-bold text-white">{t.name}</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
+                                <div className="flex items-center gap-1.5"><LocationIcon /> {t.clubName}</div>
+                                <div className="flex items-center gap-1.5"><CalendarIcon /> {formatDateRange(t.startDate, t.endDate)}</div>
+                                <div className="flex items-center gap-1.5"><UsersIcon /> {registrationCount} inscritos</div>
+                            </div>
+                        </div>
+                        <div className="flex-shrink-0 flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
+                            <button onClick={() => handleViewRegistrations(t)} className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors flex-1"><ClipboardListIcon /> Ver Inscripciones</button>
+                            <button 
+                                onClick={() => handleCloseRegistrations(t.id)} 
+                                disabled={t.status !== 'OPEN'}
+                                className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors flex-1 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
+                            >
+                                <LockClosedIcon /> 
+                                {t.status === 'OPEN' ? 'Cerrar Inscripciones' : 'Inscripciones Cerradas'}
+                            </button>
                         </div>
                     </div>
-                     <div className="flex-shrink-0 flex gap-2">
-                        <button className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><ClipboardListIcon /> Ver Inscripciones</button>
-                        <button className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><LockClosedIcon /> Cerrar Inscripciones</button>
-                    </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
       </section>
 
-      <section>
-          <h2 className="text-2xl font-semibold mb-6">Modelo de Datos</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <DataModelTable title="Tournament" description="Entidad principal para cada evento." fields={TOURNAMENT_MODEL} />
-              <DataModelTable title="Player" description="Representa a un participante individual." fields={PLAYER_MODEL} />
-              <DataModelTable title="Registration" description="Vincula jugadores a un torneo específico." fields={REGISTRATION_MODEL} />
-          </div>
-      </section>
-
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="3xl">
+      <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} size="3xl">
         <TournamentForm 
             onSubmit={handleCreateTournament}
-            onCancel={() => setIsModalOpen(false)}
+            onCancel={() => setIsFormModalOpen(false)}
         />
       </Modal>
+
+      {viewingTournament && (
+        <Modal isOpen={!!viewingTournament} onClose={handleCloseRegistrationsModal} size="2xl">
+            <RegistrationsModal
+                tournament={viewingTournament}
+                registrations={MOCK_REGISTRATIONS}
+                players={MOCK_PLAYERS}
+                onClose={handleCloseRegistrationsModal}
+            />
+        </Modal>
+      )}
     </div>
   );
 };
