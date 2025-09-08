@@ -67,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ player, onLoginRequest, onLogout
                         onClick={() => onLoginRequest('player')}
                         className="flex items-center justify-center gap-2 px-4 py-2 font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-all"
                     >
-                        <span>Iniciar Sesión / Registrarse</span>
+                        <span>Iniciar Sesión</span>
                     </button>
                 )}
             </div>
