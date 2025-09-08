@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Fix: Import firebase to provide type for 'user' state.
+import firebase from 'firebase/compat/app';
 import { db, auth, storage } from './firebase';
 import type { Tournament, Player, Registration, TournamentStatus } from './types';
 import { OrganizerDashboard } from './components/OrganizerDashboard';
@@ -106,39 +108,51 @@ const App: React.FC = () => {
     const handleProfileSave = async (updatedPlayer: Player, profilePictureFile?: File | null) => {
         if (!user) return;
         
-        let profilePictureUrl = updatedPlayer.profilePicture;
-        if (profilePictureFile) {
-            const storageRef = storage.ref(`profilePictures/${user.uid}`);
-            const snapshot = await storageRef.put(profilePictureFile);
-            profilePictureUrl = await snapshot.ref.getDownloadURL();
-        }
+        try {
+            let profilePictureUrl = updatedPlayer.profilePicture;
+            if (profilePictureFile) {
+                const storageRef = storage.ref(`profilePictures/${user.uid}`);
+                const snapshot = await storageRef.put(profilePictureFile);
+                profilePictureUrl = await snapshot.ref.getDownloadURL();
+            }
 
-        const finalPlayer = { ...updatedPlayer, profilePicture: profilePictureUrl };
-        await db.collection('players').doc(user.uid).set(finalPlayer, { merge: true });
-        setPlayer(finalPlayer);
-        setIsProfileModalOpen(false);
+            const finalPlayer = { ...updatedPlayer, profilePicture: profilePictureUrl };
+            await db.collection('players').doc(user.uid).set(finalPlayer, { merge: true });
+            setPlayer(finalPlayer);
+            setIsProfileModalOpen(false);
+            alert('Perfil actualizado correctamente.');
+        } catch (error) {
+            console.error("Error al guardar el perfil:", error);
+            alert("Error al guardar el perfil. Por favor, inténtalo de nuevo.");
+        }
     };
     
     const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
         if (!user || player?.role === 'player') return;
-
-        let posterImageUrl: string | null = null;
-        const newTournamentRef = db.collection('tournaments').doc();
-        if (data.posterImageFile) {
-            const storageRef = storage.ref(`posters/${newTournamentRef.id}`);
-            const snapshot = await storageRef.put(data.posterImageFile);
-            posterImageUrl = await snapshot.ref.getDownloadURL();
-        }
-
-        const { posterImageFile, ...tournamentData } = data;
         
-        const newTournament: Omit<Tournament, 'id'> = {
-            ...tournamentData,
-            status: 'OPEN',
-            posterImage: posterImageUrl,
-        };
+        try {
+            let posterImageUrl: string | null = null;
+            const newTournamentRef = db.collection('tournaments').doc();
+            if (data.posterImageFile) {
+                const storageRef = storage.ref(`posters/${newTournamentRef.id}`);
+                const snapshot = await storageRef.put(data.posterImageFile);
+                posterImageUrl = await snapshot.ref.getDownloadURL();
+            }
 
-        await newTournamentRef.set(newTournament);
+            const { posterImageFile, ...tournamentData } = data;
+            
+            const newTournament: Omit<Tournament, 'id'> = {
+                ...tournamentData,
+                status: 'OPEN',
+                posterImage: posterImageUrl,
+            };
+
+            await newTournamentRef.set(newTournament);
+            alert('Torneo creado con éxito.');
+        } catch (error) {
+            console.error("Error al crear el torneo:", error);
+            alert("Error al crear el torneo. Por favor, inténtalo de nuevo.");
+        }
     };
     
     const handleUpdateTournamentStatus = async (tournamentId: string, newStatus: TournamentStatus) => {
@@ -146,15 +160,58 @@ const App: React.FC = () => {
     }
     
     const handleRegister = async (registrationData: any, tournament: Tournament) => {
-        if (!player) return;
+        if (!player) {
+            alert("Debes iniciar sesión para inscribirte.");
+            return;
+        }
         
-        const newRegistration = {
-            ...registrationData,
-            tournamentId: tournament.id,
-            player1Id: player.id,
-            registrationDate: new Date().toISOString()
-        };
-        await db.collection('registrations').add(newRegistration);
+        try {
+            let player2Id: string | undefined = undefined;
+
+            // Handle player 2 creation/lookup
+            if (registrationData.player2 && registrationData.player2.email) {
+                 // Prevent registering yourself as player 2
+                if (registrationData.player2.email === player.email) {
+                    alert("No puedes inscribirte a ti mismo como tu compañero/a.");
+                    return;
+                }
+                
+                // Check if player 2 already exists
+                const player2Query = await db.collection('players').where('email', '==', registrationData.player2.email).limit(1).get();
+                if (!player2Query.empty) {
+                    player2Id = player2Query.docs[0].id;
+                } else {
+                    // Create new player for player 2
+                    const newPlayer2Ref = await db.collection('players').add({
+                        name: registrationData.player2.name,
+                        email: registrationData.player2.email,
+                        phone: registrationData.player2.phone,
+                        role: 'player', // Partners are always created with 'player' role
+                    });
+                    player2Id = newPlayer2Ref.id;
+                }
+            }
+
+            const { player2, ...restOfData } = registrationData;
+
+            const newRegistrationData = {
+                ...restOfData,
+                tournamentId: tournament.id,
+                player1Id: player.id,
+                registrationDate: new Date().toISOString(),
+            };
+
+            // Add player2Id only if it exists
+            if (player2Id) {
+                (newRegistrationData as any).player2Id = player2Id;
+            }
+
+            await db.collection('registrations').add(newRegistrationData);
+            alert('¡Inscripción realizada con éxito!');
+        } catch (error) {
+            console.error("Error al realizar la inscripción:", error);
+            alert("Ha ocurrido un error al guardar la inscripción. Por favor, inténtalo de nuevo.");
+        }
     };
 
     const handleViewTournament = (tournamentId: string) => {

@@ -9,7 +9,7 @@ interface RegistrationModalProps {
     onSubmit: (data: {
         gender: 'masculine' | 'feminine';
         category: Category;
-        player2Id?: string;
+        player2?: { name: string; email: string; phone: string; };
         timePreferences?: TimeSlot[];
     }) => void;
 }
@@ -19,6 +19,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
     const [category, setCategory] = useState<Category | ''>(player.category || '');
     const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
     const [error, setError] = useState('');
+
+    const [addPartner, setAddPartner] = useState(false);
+    const [player2Name, setPlayer2Name] = useState('');
+    const [player2Email, setPlayer2Email] = useState('');
+    const [player2Phone, setPlayer2Phone] = useState('');
 
     const availableCategories = useMemo(() => {
         if (!gender) return [];
@@ -49,12 +54,29 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
             setError('Debes seleccionar un género y una categoría.');
             return;
         }
+
+        if (addPartner && (!player2Name || !player2Email || !player2Phone)) {
+             setError('Debes completar todos los datos de tu compañero/a.');
+             return;
+        }
+
         setError('');
-        onSubmit({
+
+        const submissionData: Parameters<typeof onSubmit>[0] = {
             gender,
             category,
             timePreferences: selectedSlots,
-        });
+        };
+
+        if (addPartner) {
+            submissionData.player2 = {
+                name: player2Name,
+                email: player2Email,
+                phone: player2Phone
+            };
+        }
+
+        onSubmit(submissionData);
     };
 
     return (
@@ -103,6 +125,60 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
                             <option key={cat} value={cat}>{cat}</option>
                         ))}
                     </select>
+                </div>
+            </div>
+
+            <div className="border-t border-slate-700 pt-6">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={addPartner}
+                        onChange={(e) => setAddPartner(e.target.checked)}
+                        className="form-checkbox h-5 w-5 text-violet-500 bg-slate-800 border-slate-600 rounded focus:ring-violet-500"
+                    />
+                    <span className="text-slate-200 font-semibold">Inscribir a un compañero/a</span>
+                </label>
+
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${addPartner ? 'max-h-96 mt-4' : 'max-h-0'}`}>
+                    <div className="space-y-4 border-l-2 border-violet-500/50 pl-4 ml-2">
+                        <p className="text-sm text-slate-400">Introduce los datos de tu pareja. Si no tiene cuenta, se le creará una automáticamente.</p>
+                        <div>
+                            <label htmlFor="p2-name" className="block text-sm font-medium text-slate-300 mb-1">Nombre y Apellidos (Compañero/a)</label>
+                            <input
+                                type="text"
+                                id="p2-name"
+                                value={player2Name}
+                                onChange={(e) => setPlayer2Name(e.target.value)}
+                                className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                placeholder="Nombre completo"
+                                required={addPartner}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="p2-email" className="block text-sm font-medium text-slate-300 mb-1">Email (Compañero/a)</label>
+                            <input
+                                type="email"
+                                id="p2-email"
+                                value={player2Email}
+                                onChange={(e) => setPlayer2Email(e.target.value)}
+                                className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                placeholder="email@ejemplo.com"
+                                required={addPartner}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="p2-phone" className="block text-sm font-medium text-slate-300 mb-1">Teléfono (Compañero/a)</label>
+                            <input
+                                type="tel"
+                                id="p2-phone"
+                                value={player2Phone}
+                                onChange={(e) => setPlayer2Phone(e.target.value)}
+                                className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 focus:ring-2 focus:ring-cyan-500 outline-none"
+                                placeholder="600123456"
+                                required={addPartner}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
             
