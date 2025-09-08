@@ -126,7 +126,15 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                     </div>
                     <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-1.5 text-sm text-slate-400">
-                            <LocationIcon /> {t.clubName}
+                            <LocationIcon />
+                            <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.clubName)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline hover:text-violet-400 transition-colors"
+                            >
+                                {t.clubName}
+                            </a>
                         </div>
                         <div className="flex items-center gap-1.5 text-sm text-slate-400">
                             <CalendarIcon /> {formatDate(t.startDate)}

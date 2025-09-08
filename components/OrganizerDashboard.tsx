@@ -102,7 +102,17 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                             </h3>
                             </div>
                             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
-                                <div className="flex items-center gap-1.5"><LocationIcon /> {t.clubName}</div>
+                                <div className="flex items-center gap-1.5">
+                                    <LocationIcon />
+                                    <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.clubName)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:underline hover:text-cyan-400 transition-colors"
+                                    >
+                                        {t.clubName}
+                                    </a>
+                                </div>
                                 <div className="flex items-center gap-1.5"><CalendarIcon /> {formatDateRange(t.startDate, t.endDate)}</div>
                                 <div className="flex items-center gap-1.5"><UsersIcon /> {registrationCount} inscritos</div>
                                 {t.price > 0 && <div className="flex items-center gap-1.5 text-cyan-400 font-semibold"><CurrencyEuroIcon /> {t.price}€ / pareja<span className="text-slate-400 font-normal text-xs ml-1">(pago en el club)</span></div>}

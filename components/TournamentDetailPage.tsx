@@ -119,7 +119,17 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
             </div>
 
             <div className="space-y-4 text-slate-300 mb-8 border-b border-slate-700 pb-8">
-                <div className="flex items-center gap-3"><LocationIcon /> <span>{tournament.clubName}</span></div>
+                <div className="flex items-center gap-3">
+                    <LocationIcon />
+                    <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tournament.clubName)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline hover:text-cyan-400 transition-colors"
+                    >
+                        {tournament.clubName}
+                    </a>
+                </div>
                 <div className="flex items-center gap-3"><CalendarIcon /> <span>{formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}</span></div>
                 <div className="flex items-center gap-3"><UsersIcon /> <span>{registrationCount} inscritos</span></div>
                 {tournament.price > 0 && 
