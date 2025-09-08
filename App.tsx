@@ -406,7 +406,6 @@ const App: React.FC = () => {
     const handleAcceptCookies = () => {
         localStorage.setItem('cookieConsent', 'true');
         setShowCookieConsent(false);
-        addNotification('Preferencias de cookies guardadas.', 'success');
     };
 
     const renderContent = () => {
