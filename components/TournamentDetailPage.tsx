@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { Tournament, Player, Registration, Category } from '../types';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
@@ -126,10 +127,10 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tournament.clubName)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-1 hover:underline hover:text-cyan-400 transition-colors"
+                        className="inline-flex items-center gap-1 text-cyan-400 underline hover:text-cyan-300 transition-colors"
                     >
                         <span>{tournament.clubName}</span>
-                        <ExternalLinkIcon className="h-3.5 w-3.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <ExternalLinkIcon className="h-3.5 w-3.5" />
                     </a>
                 </div>
                 <div className="flex items-center gap-3"><CalendarIcon /> <span>{formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}</span></div>
