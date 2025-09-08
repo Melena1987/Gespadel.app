@@ -128,9 +128,6 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ tournament
                 Selecciona los horarios en los que <strong className="font-semibold">NO PUEDES JUGAR</strong>. Puedes marcar un máximo de {MAX_UNAVAILABLE_SLOTS} incidencia(s) en total.
                 <span className="block mt-1 font-mono text-xs">Marcadas: {timePreferences.length} / {MAX_UNAVAILABLE_SLOTS}</span>
             </div>
-            <div role="status" className="p-4 rounded-md bg-cyan-900/50 border border-cyan-500/30 text-cyan-200 text-sm">
-                Recuerda que estos horarios se pueden modificar hasta el día en que salen los horarios a través de la App Móvil de Publidep. Si te hacen falta más horarios, por favor, contactad por whatsapp al 690 39 45 78.
-            </div>
             <TimePreferences 
                 startDate={tournament.startDate}
                 endDate={tournament.endDate}
