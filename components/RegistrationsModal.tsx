@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Tournament, Registration, Player, Category } from '../types';
 import { UsersIcon } from './icons/UsersIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { TrashIcon } from './icons/TrashIcon';
 
 interface RegistrationsModalProps {
   tournament: Tournament;
@@ -9,6 +10,7 @@ interface RegistrationsModalProps {
   players: Player[];
   onClose: () => void;
   onViewPlayer: (playerId: string) => void;
+  onDeleteRegistration: (registrationId: string) => void;
 }
 
 type GroupedRegistrations = {
@@ -17,7 +19,7 @@ type GroupedRegistrations = {
   };
 };
 
-export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tournament, registrations, players, onClose, onViewPlayer }) => {
+export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tournament, registrations, players, onClose, onViewPlayer, onDeleteRegistration }) => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   const toggleCategory = (key: string) => {
@@ -86,6 +88,15 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
                           </>
                         )}
                       </div>
+                       {tournament.status === 'OPEN' && (
+                        <button
+                          onClick={() => onDeleteRegistration(reg.id)}
+                          className="ml-4 p-1.5 text-slate-400 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-colors"
+                          aria-label="Eliminar inscripción"
+                        >
+                          <TrashIcon />
+                        </button>
+                      )}
                     </li>
                   );
                 })}

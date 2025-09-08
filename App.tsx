@@ -217,6 +217,18 @@ const App: React.FC = () => {
             alert("Ha ocurrido un error al guardar la inscripción. Por favor, inténtalo de nuevo.");
         }
     };
+    
+    const handleDeleteRegistration = async (registrationId: string) => {
+        if (window.confirm('¿Estás seguro de que quieres eliminar esta inscripción? Esta acción no se puede deshacer.')) {
+            try {
+                await db.collection('registrations').doc(registrationId).delete();
+                alert('Inscripción eliminada correctamente.');
+            } catch (error) {
+                console.error("Error al eliminar la inscripción:", error);
+                alert("Error al eliminar la inscripción. Por favor, inténtalo de nuevo.");
+            }
+        }
+    };
 
     const handleViewTournament = (tournamentId: string) => {
         const tournament = tournaments.find(t => t.id === tournamentId);
@@ -263,6 +275,7 @@ const App: React.FC = () => {
                     registrations={registrations}
                     onRegister={handleRegister}
                     onLoginRequest={() => handleLoginRequest('player')}
+                    onDeleteRegistration={handleDeleteRegistration}
                 />
             );
         }
@@ -278,6 +291,7 @@ const App: React.FC = () => {
                     onCreateTournament={handleCreateTournament}
                     onViewTournament={handleViewTournament}
                     onViewPlayer={handleViewPlayerProfile}
+                    onDeleteRegistration={handleDeleteRegistration}
                 />
             );
         }
@@ -291,6 +305,7 @@ const App: React.FC = () => {
                 onRegister={handleRegister}
                 onViewTournament={handleViewTournament}
                 onLoginRequest={() => handleLoginRequest('player')}
+                onDeleteRegistration={handleDeleteRegistration}
             />
         );
     }

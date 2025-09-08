@@ -14,6 +14,7 @@ interface PlayerDashboardProps {
   onRegister: (registrationData: any, tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
   onLoginRequest: () => void;
+  onDeleteRegistration: (registrationId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -36,6 +37,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
     onRegister,
     onViewTournament,
     onLoginRequest,
+    onDeleteRegistration,
 }) => {
   const defaultTab = player && registrations.some(r => r.player1Id === player.id) ? 'registrations' : 'search';
   const [activeTab, setActiveTab] = useState<'registrations' | 'search'>(defaultTab);
@@ -130,17 +132,33 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                         </div>
                       )}
                     <p className="text-sm text-slate-400 mb-4 flex-grow">{t.description}</p>
-                    <button 
-                      onClick={() => activeTab === 'search' && handleRegisterClick(t)}
-                      disabled={(t.status !== 'OPEN' && activeTab === 'search') || activeTab === 'registrations'}
-                      className={`w-full mt-auto px-4 py-2 font-semibold rounded-lg shadow-md transition-all ${
-                          activeTab === 'registrations' 
-                              ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
-                              : 'text-white bg-violet-600 hover:bg-violet-700 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400'
-                      }`}
-                    >
-                      {activeTab === 'registrations' ? 'Inscrito' : (t.status === 'OPEN' ? 'Inscribirme' : 'Inscripciones cerradas')}
-                    </button>
+                    <div className="mt-auto">
+                        {activeTab === 'registrations' && registration ? (
+                            t.status === 'OPEN' ? (
+                            <button
+                                onClick={() => onDeleteRegistration(registration.id)}
+                                className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-red-600 hover:bg-red-700"
+                            >
+                                Anular Inscripción
+                            </button>
+                            ) : (
+                            <button
+                                disabled
+                                className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all bg-slate-700 text-slate-400 cursor-not-allowed"
+                            >
+                                Inscrito
+                            </button>
+                            )
+                        ) : (
+                            <button
+                            onClick={() => handleRegisterClick(t)}
+                            disabled={t.status !== 'OPEN'}
+                            className="w-full px-4 py-2 font-semibold rounded-lg shadow-md transition-all text-white bg-violet-600 hover:bg-violet-700 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400"
+                            >
+                            {t.status === 'OPEN' ? 'Inscribirme' : 'Inscripciones cerradas'}
+                            </button>
+                        )}
+                    </div>
                   </div>
                 </div>
               )

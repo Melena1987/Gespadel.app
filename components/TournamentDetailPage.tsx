@@ -16,6 +16,7 @@ interface TournamentDetailPageProps {
   registrations: Registration[];
   onRegister: (registrationData: any, tournament: Tournament) => void;
   onLoginRequest: () => void;
+  onDeleteRegistration: (registrationId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -37,12 +38,13 @@ const CategoryPill: React.FC<{category: Category, gender: 'masculine' | 'feminin
     return <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${color}`}>{category}</span>;
 }
 
-export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tournament, onBack, player, registrations, onRegister, onLoginRequest }) => {
+export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tournament, onBack, player, registrations, onRegister, onLoginRequest, onDeleteRegistration }) => {
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState('');
 
   const registrationCount = registrations.filter(r => r.tournamentId === tournament.id).length;
-  const isRegistered = player ? registrations.some(r => r.tournamentId === tournament.id && r.player1Id === player.id) : false;
+  const registration = player ? registrations.find(r => r.tournamentId === tournament.id && r.player1Id === player.id) : null;
+  const isRegistered = !!registration;
   const canRegister = tournament.status === 'OPEN' && !isRegistered;
 
   const handleRegistrationSubmit = (registrationData: any) => {
@@ -101,11 +103,20 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
             )}
             
             <div className="space-y-4">
-              {isRegistered ? (
-                  <div className="flex items-center justify-center gap-2 w-full px-6 py-3 font-semibold text-lg bg-green-500/20 text-green-300 rounded-lg shadow-md">
-                      <CheckCircleIcon />
-                      <span>Inscrito</span>
-                  </div>
+              {isRegistered && registration ? (
+                  tournament.status === 'OPEN' ? (
+                      <button 
+                          onClick={() => onDeleteRegistration(registration.id)}
+                          className="w-full px-6 py-3 font-semibold text-lg text-white bg-red-600 rounded-lg shadow-md hover:bg-red-700 transition-all"
+                      >
+                          Anular Inscripción
+                      </button>
+                  ) : (
+                      <div className="flex items-center justify-center gap-2 w-full px-6 py-3 font-semibold text-lg bg-green-500/20 text-green-300 rounded-lg shadow-md">
+                          <CheckCircleIcon />
+                          <span>Inscrito</span>
+                      </div>
+                  )
               ) : (
                   <button onClick={handleRegisterClick} disabled={!canRegister} className="w-full px-6 py-3 font-semibold text-lg text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition-all disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400">
                       {tournament.status === 'OPEN' ? 'Inscribirme Ahora' : 'Inscripciones Cerradas'}
