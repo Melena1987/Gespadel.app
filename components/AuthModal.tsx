@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import type { Player } from '../types';
+import { auth } from '../firebase';
+import firebase from 'firebase/compat/app';
+import { Modal } from './Modal';
+import { MailIcon } from './icons/MailIcon';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  role: 'organizer' | 'player';
+  role: 'player' | 'organizer';
+  onAuthSuccess: () => void;
 }
 
 const GoogleIcon = () => (
@@ -16,139 +17,118 @@ const GoogleIcon = () => (
     </svg>
 );
 
-
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role }) => {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onAuthSuccess }) => {
+  const [isLoginView, setIsLoginView] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleClose = () => {
-    setMode('login');
-    setEmail('');
-    setPassword('');
-    setName('');
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
-    setIsLoading(false);
-    onClose();
+    setLoading(true);
+
+    try {
+      if (isLoginView) {
+        await auth.signInWithEmailAndPassword(email, password);
+      } else {
+        await auth.createUserWithEmailAndPassword(email, password);
+      }
+      onAuthSuccess();
+      onClose();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        await auth.signInWithPopup(provider);
+        onAuthSuccess();
+        onClose();
+    } catch (err: any) {
+        setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-        await signInWithPopup(auth, provider);
-        // onAuthStateChanged in App.tsx will handle the rest
-        handleClose();
-    } catch (err: any) {
-        setError(err.message || 'Error al iniciar sesión con Google.');
-    } finally {
-        setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleClose = () => {
+    // Reset state on close
+    setEmail('');
+    setPassword('');
     setError(null);
-
-    try {
-      if (mode === 'signup') {
-        if (!name) {
-          setError('El nombre es requerido para registrarse.');
-          setIsLoading(false);
-          return;
-        }
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await updateProfile(user, { displayName: name });
-        
-        const newPlayerData: Omit<Player, 'id'> = { name: name, email: user.email!, phone: '', role: role, category: '4ª', gender: 'masculine' };
-        await setDoc(doc(db, 'players', user.uid), newPlayerData);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-      handleClose();
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error. Por favor, inténtalo de nuevo.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const title = role === 'organizer' ? 'Acceso Organizador' : 'Acceso Jugador';
-  const accentColor = role === 'organizer' ? 'cyan' : 'violet';
-
-  if (!isOpen) return null;
+    setLoading(false);
+    setIsLoginView(true);
+    onClose();
+  }
 
   return (
-     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-      onClick={handleClose}
-    >
-      <div
-        className="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-xl ring-1 ring-white/10 transform transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-8">
-            <h2 id="modal-title" className="text-2xl font-bold text-white text-center mb-2">{title}</h2>
-            <p className="text-sm text-slate-400 text-center mb-6">
-                {mode === 'login' ? 'Inicia sesión para continuar' : 'Crea una cuenta para empezar'}
-            </p>
-
-            {role === 'player' && (
-                <div className="space-y-3 mb-4">
-                     <button 
-                        onClick={handleGoogleSignIn}
-                        disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-slate-800 bg-white rounded-lg shadow-md hover:bg-slate-200 transition-all disabled:opacity-50">
-                        <GoogleIcon />
-                        Continuar con Google
-                     </button>
-                     <div className="flex items-center">
-                        <hr className="w-full border-slate-600"/>
-                        <span className="px-2 text-xs text-slate-500">O</span>
-                        <hr className="w-full border-slate-600"/>
-                    </div>
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === 'signup' && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">Nombre Completo</label>
-                  <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none" required />
-                </div>
-              )}
-               <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none" required />
-                </div>
-                <div>
-                  <label htmlFor="password"className="block text-sm font-medium text-slate-300 mb-1">Contraseña</label>
-                  <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none" required />
-                </div>
-
-                {error && <p className="text-sm text-red-400 text-center" role="alert">{error}</p>}
-
-                <button type="submit" disabled={isLoading} className={`w-full px-6 py-2.5 mt-2 font-semibold text-white bg-${accentColor}-600 rounded-lg shadow-md hover:bg-${accentColor}-700 transition-all disabled:bg-slate-600 disabled:cursor-not-allowed`}>
-                  {isLoading ? 'Cargando...' : (mode === 'login' ? 'Iniciar Sesión con Email' : 'Registrarse con Email')}
-                </button>
-            </form>
-            
-            <p className="text-center text-sm text-slate-400 mt-6">
-              {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes una cuenta?'}
-              <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); }} className={`font-semibold text-${accentColor}-400 hover:text-${accentColor}-300 ml-2 focus:outline-none`}>
-                {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
-              </button>
-            </p>
+    <Modal isOpen={isOpen} onClose={handleClose} size="md">
+      <div className="text-white">
+        <h2 className="text-2xl font-bold text-center mb-4">
+          {isLoginView ? 'Iniciar Sesión' : 'Registrarse'} como {role === 'player' ? 'Jugador' : 'Organizador'}
+        </h2>
+        
+        <div className="flex justify-center border-b border-slate-700 mb-6">
+          <button onClick={() => setIsLoginView(true)} className={`px-4 py-2 font-semibold transition-colors ${isLoginView ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-white'}`}>Iniciar Sesión</button>
+          <button onClick={() => setIsLoginView(false)} className={`px-4 py-2 font-semibold transition-colors ${!isLoginView ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-white'}`}>Registrarse</button>
         </div>
+
+        {error && <p className="bg-red-900/50 border border-red-500/30 text-red-300 p-3 rounded-md mb-4 text-sm">{error}</p>}
+
+        {role === 'player' && (
+             <button
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-slate-800 bg-white rounded-lg shadow-md hover:bg-slate-200 transition-all mb-4 disabled:opacity-50"
+            >
+                <GoogleIcon />
+                Continuar con Google
+             </button>
+        )}
+
+        <form onSubmit={handleAuth} className="space-y-4">
+            <div>
+                <label htmlFor="email" className="sr-only">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none"
+                    placeholder="Email"
+                    required
+                />
+            </div>
+             <div>
+                <label htmlFor="password-auth" className="sr-only">Contraseña</label>
+                <input
+                    type="password"
+                    id="password-auth"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none"
+                    placeholder="Contraseña"
+                    required
+                />
+            </div>
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all disabled:opacity-50"
+            >
+                <MailIcon />
+                {loading ? 'Procesando...' : (isLoginView ? 'Iniciar Sesión' : 'Registrarse')}
+            </button>
+        </form>
       </div>
-    </div>
+    </Modal>
   );
 };

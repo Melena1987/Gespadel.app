@@ -1,9 +1,7 @@
-
-// Import the functions you need from the SDKs you need
-// Fix: Changed import to use named export `initializeApp` for Firebase v9+ SDK.
-import { initializeApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+// Fix: Switched to Firebase v8 compat API to resolve potential versioning issues.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -16,13 +14,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-// Fix: Correctly call initializeApp as a direct function.
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export const auth = firebase.auth();
+export const db = firebase.firestore();
 
 // Set session persistence
-setPersistence(auth, browserLocalPersistence)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .catch((error) => {
     console.error("Error setting auth persistence:", error);
   });

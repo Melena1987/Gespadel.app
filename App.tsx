@@ -1,252 +1,235 @@
-
 import React, { useState, useEffect } from 'react';
+import firebase from 'firebase/compat/app';
+import { auth, db } from './firebase';
+import type { Tournament, Player, Registration, TournamentStatus, Category } from './types';
+
 import { OrganizerDashboard } from './components/OrganizerDashboard';
 import { PlayerDashboard } from './components/PlayerDashboard';
 import { TournamentDetailPage } from './components/TournamentDetailPage';
-import { AuthModal } from './components/AuthModal';
 import { Header } from './components/Header';
-// Fix: Import Modal and ProfileModal to resolve 'Cannot find name' errors.
-import { Modal } from './components/Modal';
+import { AuthModal } from './components/AuthModal';
 import { ProfileModal } from './components/ProfileModal';
-import type { Tournament, TournamentStatus, Player, Registration } from './types';
+import { Modal } from './components/Modal';
 
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { collection, getDocs, doc, setDoc, addDoc, updateDoc, query, orderBy, writeBatch, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from './firebase';
-
-type View = 'player' | 'organizer' | 'tournamentDetail';
-type AuthRequest = {
-    role: 'player' | 'organizer';
-    onSuccess?: () => void;
-};
+type View = 'organizer' | 'player';
+type AuthRole = 'player' | 'organizer';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<View>('player');
-  const [previousView, setPreviousView] = useState<View>('player');
-  const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
+    const [view, setView] = useState<View>('player');
+    const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
+    
+    const [authUser, setAuthUser] = useState<firebase.User | null>(null);
+    const [playerProfile, setPlayerProfile] = useState<Player | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [tournaments, setTournaments] = useState<Tournament[]>([]);
+    const [registrations, setRegistrations] = useState<Registration[]>([]);
+    const [players, setPlayers] = useState<Player[]>([]);
 
-  const [authRequest, setAuthRequest] = useState<AuthRequest | null>(null);
-  
-  // Fetch public data and handle auth state
-  useEffect(() => {
-    const fetchPublicData = async () => {
-        setLoading(true);
-        const tournamentsCollection = collection(db, 'tournaments');
-        const tourneyQuery = query(tournamentsCollection, orderBy('startDate', 'desc'));
-        const tournamentSnapshot = await getDocs(tourneyQuery);
-        const tournamentList = tournamentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
-        setTournaments(tournamentList);
-        
-        const registrationsCollection = collection(db, 'registrations');
-        const registrationSnapshot = await getDocs(registrationsCollection);
-        const registrationList = registrationSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
-        setRegistrations(registrationList);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [authModalRole, setAuthModalRole] = useState<AuthRole>('player');
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            setAuthUser(user);
+            if (user) {
+                const playerDocRef = db.collection('players').doc(user.uid);
+                const playerDocSnap = await playerDocRef.get();
+                if (playerDocSnap.exists) {
+                    const playerData = { id: playerDocSnap.id, ...playerDocSnap.data() } as Player;
+                    setPlayerProfile(playerData);
+                    if (playerData.role === 'organizer' || playerData.role === 'organizer_player') {
+                        setView('organizer');
+                    } else {
+                        setView('player');
+                    }
+                } else {
+                    const newPlayer: Player = {
+                        id: user.uid,
+                        name: user.displayName || 'Nuevo Jugador',
+                        email: user.email || '',
+                        phone: user.phoneNumber || '',
+                        role: 'player',
+                    };
+                    await playerDocRef.set(newPlayer);
+                    setPlayerProfile(newPlayer);
+                    setView('player');
+                }
+            } else {
+                setPlayerProfile(null);
+                setView('player'); // Reset to player view on logout
+            }
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        const unsubTournaments = db.collection('tournaments').onSnapshot((snapshot) => {
+            const tournamentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
+            setTournaments(tournamentsData);
+        });
+        const unsubRegistrations = db.collection('registrations').onSnapshot((snapshot) => {
+            const registrationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
+            setRegistrations(registrationsData);
+        });
+         const unsubPlayers = db.collection('players').onSnapshot((snapshot) => {
+            const playersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player));
+            setPlayers(playersData);
+        });
+
+        return () => {
+            unsubTournaments();
+            unsubRegistrations();
+            unsubPlayers();
+        };
+    }, []);
+
+    const handleLoginRequest = (role: AuthRole) => {
+        setAuthModalRole(role);
+        setIsAuthModalOpen(true);
     };
 
-    fetchPublicData();
+    const handleAuthSuccess = () => {
+        setIsAuthModalOpen(false);
+    };
+    
+    const handleLogout = async () => {
+        await auth.signOut();
+    };
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        setAuthUser(user);
-        if (user) {
-            const playersCollection = collection(db, 'players');
-            const playersSnapshot = await getDocs(playersCollection);
-            const playersList = playersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player));
-            setAllPlayers(playersList);
+    const handleSaveProfile = async (updatedPlayer: Player) => {
+        if (!playerProfile) return;
+        await db.collection('players').doc(playerProfile.id).set(updatedPlayer, { merge: true });
+        setPlayerProfile(updatedPlayer);
+        setIsProfileModalOpen(false);
+    };
 
-            let currentPlayer = playersList.find(p => p.id === user.uid);
-            if (!currentPlayer) {
-                const newPlayerData: Omit<Player, 'id'> = {
-                    name: user.displayName || 'Nuevo Jugador',
-                    email: user.email || '',
-                    phone: user.phoneNumber || '',
-                    category: '4ª',
-                    gender: 'masculine',
-                    role: 'player'
-                };
-                await setDoc(doc(db, 'players', user.uid), newPlayerData);
-                currentPlayer = { id: user.uid, ...newPlayerData };
-                setAllPlayers(prev => [...prev, currentPlayer!]);
-            }
-            setPlayer(currentPlayer);
-            
-            if (authRequest?.onSuccess) {
-                authRequest.onSuccess();
-            }
-            setAuthRequest(null);
-            
-            if (currentPlayer.role === 'organizer') {
-              setView('organizer');
-            } else {
-              setView('player');
-            }
+    const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status'>) => {
+        await db.collection('tournaments').add({ ...data, status: 'OPEN' });
+    };
+
+    const handleUpdateTournamentStatus = async (tournamentId: string, newStatus: TournamentStatus) => {
+        await db.collection('tournaments').doc(tournamentId).update({ status: newStatus });
+    };
+
+    const findOrCreatePlayer = async (playerData: Partial<Player>): Promise<string> => {
+        const playersRef = db.collection('players');
+        const querySnapshot = await playersRef.where("email", "==", playerData.email).get();
+        if (!querySnapshot.empty) {
+            return querySnapshot.docs[0].id;
         } else {
-            setPlayer(null);
-            setView('player');
+            const newPlayerRef = await playersRef.add({
+                name: playerData.name,
+                email: playerData.email,
+                phone: '',
+                role: 'player',
+            });
+            return newPlayerRef.id;
         }
-        setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [authRequest?.onSuccess]);
-  
-  const handleLoginRequest = (role: 'player' | 'organizer', onSuccess?: () => void) => {
-    setAuthRequest({ role, onSuccess });
-  };
+    };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    setPlayer(null);
-    setView('player');
-    setSelectedTournamentId(null);
-  };
-  
-  const viewTournament = (tournamentId: string) => {
-    const currentView = player?.role === 'organizer' ? 'organizer' : 'player';
-    if (view !== 'tournamentDetail') {
-      setPreviousView(currentView);
+    const handleRegister = async (registrationData: any, tournament: Tournament) => {
+        const player1Id = await findOrCreatePlayer({name: registrationData.player1.name, email: registrationData.player1.email});
+        let player2Id: string | undefined = undefined;
+        if (registrationData.player2) {
+            player2Id = await findOrCreatePlayer({name: registrationData.player2.name, email: registrationData.player2.email});
+        }
+
+        const newRegistration: Omit<Registration, 'id'> = {
+            tournamentId: tournament.id,
+            player1Id: player1Id,
+            player2Id: player2Id,
+            category: registrationData.category as Category,
+            gender: registrationData.gender,
+            registrationDate: new Date().toISOString(),
+            timePreferences: registrationData.timePreferences,
+        };
+
+        await db.collection('registrations').add(newRegistration);
+    };
+
+    const handleViewTournament = (tournamentId: string) => {
+        setSelectedTournamentId(tournamentId);
+    };
+    
+    const handleBack = () => {
+        setSelectedTournamentId(null);
+    };
+
+    const handleViewChange = (newView: View) => {
+        setView(newView);
     }
-    setSelectedTournamentId(tournamentId);
-    setView('tournamentDetail');
-  };
 
-  const handleBackFromDetail = () => {
-      setView(previousView);
-      setSelectedTournamentId(null);
-  };
-
-  const updateTournamentStatus = async (tournamentId: string, newStatus: TournamentStatus) => {
-    const tournamentRef = doc(db, 'tournaments', tournamentId);
-    await updateDoc(tournamentRef, { status: newStatus });
-    setTournaments(prev => prev.map(t => t.id === tournamentId ? { ...t, status: newStatus } : t));
-  };
-
-  const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status'>) => {
-    const newTournamentData = { status: 'OPEN' as TournamentStatus, ...data, createdAt: serverTimestamp() };
-    const docRef = await addDoc(collection(db, 'tournaments'), newTournamentData);
-    const newTournament: Tournament = { id: docRef.id, status: 'OPEN', ...data };
-    setTournaments(prev => [newTournament, ...prev]);
-  };
-  
-  const handleRegistrationSubmit = async (registrationData: any, tournament: Tournament) => {
-    if (!player) return;
-    const batch = writeBatch(db);
-    let player2Id: string | undefined = undefined;
-    if (registrationData.player2?.name) {
-      const newPlayerRef = doc(collection(db, 'players'));
-      const newPlayerData: Omit<Player, 'id'> = { name: registrationData.player2.name, email: registrationData.player2.email, phone: '', role: 'player' };
-      batch.set(newPlayerRef, newPlayerData);
-      player2Id = newPlayerRef.id;
-      setAllPlayers(prev => [...prev, {id: player2Id!, ...newPlayerData}]);
-    }
-    const newRegistrationData: Omit<Registration, 'id'> = { tournamentId: tournament.id, player1Id: player.id, player2Id: player2Id, category: registrationData.category, gender: registrationData.gender, registrationDate: new Date().toISOString(), timePreferences: registrationData.timePreferences };
-    const regRef = doc(collection(db, 'registrations'));
-    batch.set(regRef, newRegistrationData);
-    await batch.commit();
-    setRegistrations(prev => [...prev, {id: regRef.id, ...newRegistrationData}]);
-    alert(`¡Inscripción para ${player.name} en ${tournament.name} completada!`);
-  };
-
-  const handleProfileSave = async (updatedPlayer: Player) => {
-    const playerRef = doc(db, 'players', updatedPlayer.id);
-    await setDoc(playerRef, updatedPlayer, { merge: true });
-    setPlayer(updatedPlayer);
-    setAllPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
-    setIsProfileModalOpen(false);
-  };
-  
-  const renderContent = () => {
-    if (view === 'organizer' && player?.role === 'organizer') {
-      return (
-        <OrganizerDashboard
-          onBack={handleLogout}
-          tournaments={tournaments}
-          registrations={registrations}
-          players={allPlayers}
-          onUpdateTournamentStatus={updateTournamentStatus}
-          onCreateTournament={handleCreateTournament}
-          onViewTournament={viewTournament}
-        />
-      );
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Cargando...</div>;
     }
     
-    if (view === 'tournamentDetail') {
-        const tournament = tournaments.find(t => t.id === selectedTournamentId);
-        if (!tournament) {
-          setView(previousView);
-          return null;
-        }
-        return (
-          <TournamentDetailPage
-            tournament={tournament}
-            onBack={handleBackFromDetail}
-            player={player}
-            registrations={registrations}
-            onRegister={handleRegistrationSubmit}
-            onLoginRequest={() => handleLoginRequest('player')}
-          />
-        );
-    }
-    
-    // Default to player view (public or logged in)
+    const selectedTournament = tournaments.find(t => t.id === selectedTournamentId);
+
     return (
-      <PlayerDashboard
-        tournaments={tournaments}
-        player={player}
-        registrations={registrations}
-        onRegister={handleRegistrationSubmit}
-        onViewTournament={viewTournament}
-        onLoginRequest={() => handleLoginRequest('player')}
-      />
-    );
-  };
-
-  if (loading && !tournaments.length) {
-      return (
-        <div className="min-h-screen flex items-center justify-center text-white text-xl animate-pulse">
-            Cargando Gespadel...
-        </div>
-      );
-  }
-
-  return (
-    <div className="bg-slate-900 text-white min-h-screen font-sans">
-      {view !== 'organizer' && (
-        <Header 
-            player={player} 
-            onLoginRequest={handleLoginRequest} 
-            onLogout={handleLogout} 
-            onProfileClick={() => setIsProfileModalOpen(true)}
-        />
-      )}
-      <main>{renderContent()}</main>
-      
-      {authRequest && (
-        <AuthModal 
-            isOpen={!!authRequest}
-            onClose={() => setAuthRequest(null)}
-            role={authRequest.role}
-        />
-      )}
-
-      {player && (
-        <Modal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} size="md">
-            <ProfileModal 
-              player={player}
-              onClose={() => setIsProfileModalOpen(false)}
-              onSave={handleProfileSave}
+        <div className="min-h-screen bg-slate-900 text-white font-sans">
+            <Header 
+                player={playerProfile}
+                onLoginRequest={handleLoginRequest}
+                onLogout={handleLogout}
+                onProfileClick={() => setIsProfileModalOpen(true)}
+                view={view}
+                onViewChange={handleViewChange}
             />
-        </Modal>
-      )}
-    </div>
-  );
-};
+
+            <main className="container mx-auto">
+                {selectedTournament ? (
+                    <TournamentDetailPage
+                        tournament={selectedTournament}
+                        onBack={handleBack}
+                        player={playerProfile}
+                        registrations={registrations}
+                        onRegister={handleRegister}
+                        onLoginRequest={() => handleLoginRequest('player')}
+                    />
+                ) : view === 'organizer' && ['organizer', 'organizer_player'].includes(playerProfile?.role || '') ? (
+                     <OrganizerDashboard 
+                        onBack={() => setView('player')}
+                        tournaments={tournaments}
+                        registrations={registrations}
+                        players={players}
+                        onUpdateTournamentStatus={handleUpdateTournamentStatus}
+                        onCreateTournament={handleCreateTournament}
+                        onViewTournament={handleViewTournament}
+                    />
+                ) : (
+                    <PlayerDashboard 
+                        tournaments={tournaments}
+                        player={playerProfile}
+                        registrations={registrations}
+                        onRegister={handleRegister}
+                        onViewTournament={handleViewTournament}
+                        onLoginRequest={() => handleLoginRequest('player')}
+                    />
+                )}
+            </main>
+
+            {isAuthModalOpen && (
+                <AuthModal
+                    isOpen={isAuthModalOpen}
+                    onClose={() => setIsAuthModalOpen(false)}
+                    role={authModalRole}
+                    onAuthSuccess={handleAuthSuccess}
+                />
+            )}
+            {isProfileModalOpen && playerProfile && (
+                <Modal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} size="lg">
+                    <ProfileModal 
+                        player={playerProfile}
+                        onClose={() => setIsProfileModalOpen(false)}
+                        onSave={handleSaveProfile}
+                    />
+                </Modal>
+            )}
+        </div>
+    );
+}
 
 export default App;

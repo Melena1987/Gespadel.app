@@ -1,62 +1,95 @@
-# Gespadel - Configuración del Proyecto Firebase
+# Configuración del Proyecto Gespadel
 
-Este documento describe los pasos necesarios para configurar el backend de Firebase para que la aplicación Gespadel funcione correctamente. Esta información es para desarrolladores y asistentes de IA que trabajen en el proyecto.
+Esta guía detalla los pasos necesarios para configurar el backend en Firebase para que la aplicación funcione correctamente. Está destinada a desarrolladores y asistentes de código que necesiten replicar el entorno.
 
-## 1. Configuración del Proyecto en Firebase
+## 1. Crear Proyecto en Firebase
 
-1.  **Crear un Proyecto**: Ve a la [Consola de Firebase](https://console.firebase.google.com/) y crea un nuevo proyecto si aún no existe.
-2.  **Añadir una Aplicación Web**:
-    *   Dentro del proyecto, registra una nueva aplicación web.
-    *   Firebase te proporcionará un objeto de configuración (`firebaseConfig`). Este objeto ya está incluido en el fichero `firebase.ts` del proyecto. No es necesario modificarlo a menos que se cree un nuevo proyecto de Firebase.
+- Ve a la [Consola de Firebase](https://console.firebase.google.com/) y crea un nuevo proyecto.
+- Añade una **Aplicación Web** a tu proyecto.
+- Firebase te proporcionará un objeto `firebaseConfig`. Este objeto ya está incluido en el fichero `firebase.ts`, por lo que no necesitas modificarlo en el código.
 
-## 2. Configuración de la Base de Datos (Firestore)
+## 2. Habilitar Servicios de Firebase
 
-1.  **Habilitar Firestore**:
-    *   En el menú lateral de la consola, ve a **Firestore Database**.
-    *   Haz clic en "Crear base de datos".
-    *   **Inicia la base de datos en modo de prueba**. Esto permite lecturas y escrituras sin restricciones de autenticación, lo cual es útil para el desarrollo inicial.
+### Firestore Database
 
-2.  **Crear Colecciones**:
-    *   Dentro de Firestore, es necesario crear las siguientes colecciones. Puedes dejarlas vacías inicialmente; la aplicación las poblará.
-        *   `tournaments`
-        *   `players`
-        *   `registrations`
+1.  En el menú lateral, ve a **Firestore Database** y haz clic en "Crear base de datos".
+2.  Inicia la base de datos en **modo de prueba**. Esto permite lecturas y escrituras sin restricciones iniciales.
+3.  **Crea las Colecciones**: Dentro de Firestore, crea manualmente las siguientes colecciones (puedes dejarlas vacías inicialmente):
+    -   `tournaments`
+    -   `players`
+    -   `registrations`
 
-## 3. Configuración de la Autenticación
+### Authentication
 
-1.  **Habilitar Authentication**:
-    *   En el menú lateral, ve a **Authentication**.
-2.  **Habilitar Proveedor de Google**:
-    *   Ve a la pestaña "Sign-in method" (Método de inicio de sesión).
-    *   Busca **Google** en la lista de proveedores y habilítalo. Proporciona un correo electrónico de soporte del proyecto cuando se te solicite.
+1.  Ve a la sección de **Authentication**.
+2.  En la pestaña "Sign-in method" (Método de inicio de sesión), habilita los siguientes proveedores:
+    -   **Email/Contraseña**
+    -   **Google**
 
-## 4. Reglas de Seguridad de Firestore (Para Producción)
+## 3. Reglas de Seguridad de Firestore
 
-El modo de prueba es inseguro para un entorno de producción. Una vez que la aplicación esté lista para ser desplegada, es crucial actualizar las reglas de seguridad de Firestore para proteger los datos.
-
-1.  Ve a **Firestore Database -> Reglas**.
-2.  Reemplaza el contenido existente con las siguientes reglas:
+Para producción, es crucial proteger tu base de datos. Reemplaza las reglas por defecto en **Firestore Database -> Reglas** con las siguientes:
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Cualquiera puede leer torneos e inscripciones.
+
+    // Función para comprobar si un usuario es organizador
+    function isOrganizer() {
+      return request.auth != null && (
+        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.role == 'organizer' ||
+        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.role == 'organizer_player'
+      );
+    }
+
+    // Lectura pública de torneos e inscripciones.
     match /tournaments/{tournamentId} {
       allow read: if true;
-      allow create, update: if request.auth != null; // Solo usuarios autenticados pueden crear/actualizar.
+      // Solo los organizadores pueden crear/actualizar torneos.
+      allow create, update: if isOrganizer();
     }
     match /registrations/{registrationId} {
       allow read: if true;
-      allow create: if request.auth != null; // Solo usuarios autenticados pueden inscribirse.
+      // Solo usuarios autenticados pueden inscribirse.
+      allow create: if request.auth != null;
     }
-    // Cualquiera puede leer perfiles, pero un usuario solo puede editar el suyo.
+    
+    // Reglas específicas para la colección de jugadores.
     match /players/{userId} {
+      // Cualquiera puede leer perfiles.
       allow read: if true;
-      allow create, update: if request.auth.uid == userId;
+      
+      // Un usuario puede crear su propio perfil, PERO solo con el rol de 'player'.
+      allow create: if request.auth.uid == userId && request.resource.data.role == 'player';
+      
+      // Un usuario puede actualizar su perfil, PERO NO PUEDE cambiar su rol.
+      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
     }
   }
 }
 ```
 
-Con estos pasos, el backend de Firebase estará correctamente configurado para soportar todas las funcionalidades de la aplicación Gespadel.
+## 4. Gestión de Roles de Usuario
+
+El sistema diferencia entre `player`, `organizer` y `organizer_player`.
+
+### Crear un Organizador (o un Usuario con Doble Rol)
+
+El rol de organizador **no se puede asignar desde la aplicación** por seguridad. Debe hacerse manualmente:
+
+1.  **Crear el Usuario en Authentication**:
+    -   Ve a **Authentication -> Users** y haz clic en "Add user".
+    -   Crea el usuario con su email y una contraseña.
+    -   Copia el **User UID** que se genera para este usuario.
+
+2.  **Asignar el Rol en Firestore**:
+    -   Ve a **Firestore Database -> `players`**.
+    -   Haz clic en "Add document".
+    -   En el campo **Document ID**, pega el **UID** del usuario que copiaste.
+    -   Añade los campos necesarios para el perfil del usuario (name, email, etc.).
+    -   Añade un campo `role` (tipo `string`) y asígnale uno de los siguientes valores:
+        -   `"organizer"`: Para un usuario que solo puede acceder al panel de organizador.
+        -   `"organizer_player"`: Para un usuario que necesita acceder tanto al panel de organizador como al de jugador.
+
+¡Con estos pasos, el entorno de Firebase estará listo y la aplicación será completamente funcional!
