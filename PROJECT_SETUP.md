@@ -30,17 +30,19 @@ Esta guía detalla los pasos necesarios para configurar el backend en Firebase p
 
 Para producción, es crucial proteger tu base de datos. Reemplaza las reglas por defecto en **Firestore Database -> Reglas** con las siguientes:
 
-```
+```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Función para comprobar si un usuario es organizador
+    // Función para comprobar si un usuario es organizador de forma segura.
+    // Comprueba primero la existencia del documento para evitar errores.
     function isOrganizer() {
-      return request.auth != null && (
-        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.role == 'organizer' ||
-        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.role == 'organizer_player'
-      );
+      let userDocPath = /databases/$(database)/documents/players/$(request.auth.uid);
+      return request.auth != null && 
+             exists(userDocPath) &&
+             (get(userDocPath).data.role == 'organizer' ||
+              get(userDocPath).data.role == 'organizer_player');
     }
 
     // Lectura pública de torneos e inscripciones.
@@ -60,11 +62,14 @@ service cloud.firestore {
       // Cualquiera puede leer perfiles.
       allow read: if true;
       
-      // Un usuario puede crear su propio perfil, PERO solo con el rol de 'player'.
-      allow create: if request.auth.uid == userId && request.resource.data.role == 'player';
+      // Un usuario autenticado puede crear un perfil, PERO solo con el rol de 'player'.
+      // Esto permite a un nuevo usuario crear su propio perfil y a un jugador existente crear un perfil para su compañero.
+      allow create: if request.auth != null && 
+                     request.resource.data.role == 'player';
       
       // Un usuario puede actualizar su perfil, PERO NO PUEDE cambiar su rol.
-      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
+      allow update: if request.auth.uid == userId && 
+                     request.resource.data.role == resource.data.role;
     }
   }
 }
