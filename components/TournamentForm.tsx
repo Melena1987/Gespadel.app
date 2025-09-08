@@ -18,6 +18,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const [name, setName] = useState('');
   const [clubName, setClubName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
   const [inscriptionStartDate, setInscriptionStartDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -36,6 +37,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         setName(initialData.name);
         setClubName(initialData.clubName);
         setDescription(initialData.description);
+        setPrice(initialData.price ? String(initialData.price) : '');
         setInscriptionStartDate(initialData.inscriptionStartDate);
         setStartDate(initialData.startDate);
         setEndDate(initialData.endDate);
@@ -53,6 +55,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         setName('');
         setClubName('');
         setDescription('');
+        setPrice('');
         setInscriptionStartDate('');
         setStartDate('');
         setEndDate('');
@@ -124,11 +127,12 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && clubName && description && inscriptionStartDate && startDate && endDate && contactPhone && contactEmail && (masculineCategories.size > 0 || feminineCategories.size > 0)) {
+    if (name && clubName && price && description && inscriptionStartDate && startDate && endDate && contactPhone && contactEmail && (masculineCategories.size > 0 || feminineCategories.size > 0)) {
       onSubmit({
         name,
         clubName,
         description,
+        price: parseFloat(price),
         inscriptionStartDate,
         startDate,
         endDate,
@@ -166,17 +170,33 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         />
       </div>
 
-      <div>
-        <label htmlFor="clubName" className="block text-sm font-medium text-slate-300 mb-1">Nombre del Club</label>
-        <input
-          type="text"
-          id="clubName"
-          value={clubName}
-          onChange={(e) => setClubName(e.target.value)}
-          className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
-          placeholder="Ej: Padel Club Indoor"
-          required
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label htmlFor="clubName" className="block text-sm font-medium text-slate-300 mb-1">Nombre del Club</label>
+            <input
+            type="text"
+            id="clubName"
+            value={clubName}
+            onChange={(e) => setClubName(e.target.value)}
+            className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+            placeholder="Ej: Padel Club Indoor"
+            required
+            />
+        </div>
+        <div>
+            <label htmlFor="price" className="block text-sm font-medium text-slate-300 mb-1">Precio Inscripción (€)</label>
+            <input
+            type="number"
+            id="price"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+            placeholder="Ej: 20"
+            required
+            min="0"
+            step="0.01"
+            />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

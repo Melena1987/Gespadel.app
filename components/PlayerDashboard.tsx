@@ -1,4 +1,3 @@
-
 // Fix: Create file content for PlayerDashboard.tsx
 import React, { useState } from 'react';
 import type { Tournament, Player, Registration } from '../types';
@@ -8,6 +7,7 @@ import { LocationIcon } from './icons/LocationIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { ShareButton } from './ShareButton';
+import { CurrencyEuroIcon } from './icons/CurrencyEuroIcon';
 
 interface PlayerDashboardProps {
   tournaments: Tournament[];
@@ -123,11 +123,18 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                         </h3>
                         <span className={`flex-shrink-0 inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[t.status]}`}>{t.status}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm text-slate-400 mb-4">
-                        <LocationIcon /> {t.clubName}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-slate-400 mb-4">
-                        <CalendarIcon /> {formatDate(t.startDate)}
+                    <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-1.5 text-sm text-slate-400">
+                            <LocationIcon /> {t.clubName}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm text-slate-400">
+                            <CalendarIcon /> {formatDate(t.startDate)}
+                        </div>
+                         {t.price > 0 &&
+                            <div className="flex items-center gap-1.5 text-sm text-cyan-400 font-semibold">
+                                <CurrencyEuroIcon /> {t.price}€ por pareja
+                            </div>
+                        }
                     </div>
                      {registration && (
                          <div className="flex items-center justify-center gap-2 bg-slate-700/50 text-slate-300 text-sm font-semibold p-2 rounded-md text-center mb-4">

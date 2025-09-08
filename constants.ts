@@ -11,6 +11,7 @@ export const TOURNAMENT_MODEL: FieldDefinition[] = [
   { name: 'endDate', type: FieldType.DATE, description: 'Fecha y hora de finalización.', example: '2024-08-18T20:00:00' },
   { name: 'contactPhone', type: FieldType.TEXT, description: 'Teléfono de contacto para el torneo.', example: '+34 600 11 22 33' },
   { name: 'contactEmail', type: FieldType.TEXT, description: 'Email de contacto para el torneo.', example: 'torneo@club.com' },
+  { name: 'price', type: FieldType.NUMBER, description: 'Precio de la inscripción por pareja.', example: '20' },
   { name: 'categories', type: FieldType.OBJECT, description: 'Categorías divididas por género.', example: '{ masculine: ["1ª"], feminine: ["2ª"] }' },
   { name: 'status', type: FieldType.ENUM, description: 'Estado actual del torneo.', example: 'OPEN, IN_PROGRESS, FINISHED' },
   { name: 'rulesPdfUrl', type: FieldType.TEXT, description: 'URL al PDF con el reglamento del torneo.', example: 'https://firebasestorage.googleapis.com/...' },

@@ -12,6 +12,7 @@ import { ShareButton } from './ShareButton';
 import { PhoneIcon } from './icons/PhoneIcon';
 import { MailIcon } from './icons/MailIcon';
 import { DocumentDownloadIcon } from './icons/DocumentDownloadIcon';
+import { CurrencyEuroIcon } from './icons/CurrencyEuroIcon';
 
 interface TournamentDetailPageProps {
   tournament: Tournament;
@@ -120,6 +121,11 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 <div className="flex items-center gap-3"><LocationIcon /> <span>{tournament.clubName}</span></div>
                 <div className="flex items-center gap-3"><CalendarIcon /> <span>{formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}</span></div>
                 <div className="flex items-center gap-3"><UsersIcon /> <span>{registrationCount} inscritos</span></div>
+                {tournament.price > 0 && 
+                    <div className="flex items-center gap-3 text-cyan-400 font-bold text-lg">
+                        <CurrencyEuroIcon /> <span>{tournament.price}€ por pareja</span>
+                    </div>
+                }
             </div>
 
             <div className="mb-8">

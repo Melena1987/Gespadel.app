@@ -33,6 +33,7 @@ export interface Tournament {
   endDate: string;
   contactPhone: string;
   contactEmail: string;
+  price: number;
   categories: {
     masculine: Category[];
     feminine: Category[];
