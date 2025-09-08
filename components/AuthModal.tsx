@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import firebase from 'firebase/compat/app';
@@ -33,7 +34,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onA
       if (isLoginView) {
         await auth.signInWithEmailAndPassword(email, password);
       } else {
-        await auth.createUserWithEmailAndPassword(email, password);
+        if (role === 'player') { // Only players can register via form
+          await auth.createUserWithEmailAndPassword(email, password);
+        } else {
+          // This path should not be reachable due to the UI changes, but it's a safeguard.
+          throw new Error("El registro de organizador debe solicitarse por correo.");
+        }
       }
       onAuthSuccess();
       onClose();
@@ -82,52 +88,66 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onA
         </div>
 
         {error && <p className="bg-red-900/50 border border-red-500/30 text-red-300 p-3 rounded-md mb-4 text-sm">{error}</p>}
+        
+        {isLoginView || role === 'player' ? (
+          <>
+            {role === 'player' && (
+                 <button
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-slate-800 bg-white rounded-lg shadow-md hover:bg-slate-200 transition-all mb-4 disabled:opacity-50"
+                >
+                    <GoogleIcon />
+                    Continuar con Google
+                 </button>
+            )}
 
-        {role === 'player' && (
-             <button
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-slate-800 bg-white rounded-lg shadow-md hover:bg-slate-200 transition-all mb-4 disabled:opacity-50"
+            <form onSubmit={handleAuth} className="space-y-4">
+                <div>
+                    <label htmlFor="email" className="sr-only">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none"
+                        placeholder="Email"
+                        required
+                    />
+                </div>
+                 <div>
+                    <label htmlFor="password-auth" className="sr-only">Contraseña</label>
+                    <input
+                        type="password"
+                        id="password-auth"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none"
+                        placeholder="Contraseña"
+                        required
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all disabled:opacity-50"
+                >
+                    <MailIcon />
+                    {loading ? 'Procesando...' : (isLoginView ? 'Iniciar Sesión' : 'Registrarse')}
+                </button>
+            </form>
+          </>
+        ) : (
+          <div className="text-center text-slate-300 p-4">
+            <p className="mb-4">¿Quieres darte de alta como Organizador?</p>
+            <a 
+              href="mailto:info@melenamarketing.com"
+              className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-                <GoogleIcon />
-                Continuar con Google
-             </button>
+              Solicítalo aquí
+            </a>
+          </div>
         )}
-
-        <form onSubmit={handleAuth} className="space-y-4">
-            <div>
-                <label htmlFor="email" className="sr-only">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none"
-                    placeholder="Email"
-                    required
-                />
-            </div>
-             <div>
-                <label htmlFor="password-auth" className="sr-only">Contraseña</label>
-                <input
-                    type="password"
-                    id="password-auth"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 outline-none"
-                    placeholder="Contraseña"
-                    required
-                />
-            </div>
-            <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all disabled:opacity-50"
-            >
-                <MailIcon />
-                {loading ? 'Procesando...' : (isLoginView ? 'Iniciar Sesión' : 'Registrarse')}
-            </button>
-        </form>
       </div>
     </Modal>
   );
