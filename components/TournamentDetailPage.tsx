@@ -78,9 +78,9 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-4">
             {tournament.posterImage ? (
-                <img src={tournament.posterImage} alt={`Cartel de ${tournament.name}`} className="w-full object-cover rounded-xl shadow-lg ring-1 ring-white/10"/>
+                <img src={tournament.posterImage} alt={`Cartel de ${tournament.name}`} className="w-full aspect-[210/297] object-cover rounded-xl shadow-lg ring-1 ring-white/10"/>
             ) : (
-                <div className="w-full aspect-[3/4] bg-slate-800/50 rounded-xl flex items-center justify-center ring-1 ring-white/10">
+                <div className="w-full aspect-[210/297] bg-slate-800/50 rounded-xl flex items-center justify-center ring-1 ring-white/10">
                     <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">GESPADEL</span>
                 </div>
             )}
@@ -134,36 +134,7 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 <p className="text-slate-400 whitespace-pre-line">{tournament.description}</p>
             </div>
 
-            {tournament.rulesPdfUrl && (
-                <div className="mb-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Reglamento</h2>
-                    <a 
-                        href={tournament.rulesPdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-3 px-5 py-2.5 font-semibold text-white bg-slate-700 rounded-lg shadow-md hover:bg-slate-600 transition-all"
-                    >
-                        <DocumentDownloadIcon />
-                        <span>Descargar Reglamento (PDF)</span>
-                    </a>
-                </div>
-            )}
-
             <div className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-4">Contacto de la Organización</h2>
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-slate-300">
-                        <PhoneIcon />
-                        <a href={`tel:${tournament.contactPhone}`} className="hover:text-cyan-400 transition-colors">{tournament.contactPhone}</a>
-                    </div>
-                    <div className="flex items-center gap-4 text-slate-300">
-                        <MailIcon />
-                        <a href={`mailto:${tournament.contactEmail}`} className="hover:text-cyan-400 transition-colors">{tournament.contactEmail}</a>
-                    </div>
-                </div>
-            </div>
-
-            <div>
                 <h2 className="text-xl font-bold text-white mb-4">Categorías</h2>
                 <div className="space-y-4">
                     {tournament.categories.masculine.length > 0 && (
@@ -180,6 +151,36 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                     )}
                 </div>
             </div>
+
+            {tournament.rulesPdfUrl && (
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold text-white mb-4">Reglamento</h2>
+                    <a 
+                        href={tournament.rulesPdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-3 px-5 py-2.5 font-semibold text-white bg-slate-700 rounded-lg shadow-md hover:bg-slate-600 transition-all"
+                    >
+                        <DocumentDownloadIcon />
+                        <span>Descargar Reglamento (PDF)</span>
+                    </a>
+                </div>
+            )}
+
+            <div>
+                <h2 className="text-xl font-bold text-white mb-4">Contacto de la Organización</h2>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4 text-slate-300">
+                        <PhoneIcon />
+                        <a href={`tel:${tournament.contactPhone}`} className="hover:text-cyan-400 transition-colors">{tournament.contactPhone}</a>
+                    </div>
+                    <div className="flex items-center gap-4 text-slate-300">
+                        <MailIcon />
+                        <a href={`mailto:${tournament.contactEmail}`} className="hover:text-cyan-400 transition-colors">{tournament.contactEmail}</a>
+                    </div>
+                </div>
+            </div>
+
         </div>
       </div>
        {isRegistrationModalOpen && player && (

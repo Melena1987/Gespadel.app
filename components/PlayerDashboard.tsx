@@ -106,9 +106,9 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                 <div key={t.id} className="bg-slate-800/50 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-violet-500/10">
                   <button onClick={() => onViewTournament(t.id)} className="w-full block focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500 rounded-t-xl cursor-pointer">
                     {t.posterImage ? (
-                      <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="rounded-t-xl h-48 w-full object-cover"/>
+                      <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="rounded-t-xl w-full aspect-[210/297] object-cover"/>
                     ) : (
-                      <div className="rounded-t-xl h-48 w-full bg-slate-900/75 flex items-center justify-center">
+                      <div className="rounded-t-xl w-full aspect-[210/297] bg-slate-900/75 flex items-center justify-center">
                         <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
                           GESPADEL
                         </span>
