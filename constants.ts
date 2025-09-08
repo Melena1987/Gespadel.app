@@ -13,6 +13,7 @@ export const TOURNAMENT_MODEL: FieldDefinition[] = [
   { name: 'contactEmail', type: FieldType.TEXT, description: 'Email de contacto para el torneo.', example: 'torneo@club.com' },
   { name: 'categories', type: FieldType.OBJECT, description: 'Categorías divididas por género.', example: '{ masculine: ["1ª"], feminine: ["2ª"] }' },
   { name: 'status', type: FieldType.ENUM, description: 'Estado actual del torneo.', example: 'OPEN, IN_PROGRESS, FINISHED' },
+  { name: 'rulesPdfUrl', type: FieldType.TEXT, description: 'URL al PDF con el reglamento del torneo.', example: 'https://firebasestorage.googleapis.com/...' },
 ];
 
 export const PLAYER_MODEL: FieldDefinition[] = [

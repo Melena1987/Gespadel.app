@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import type { Tournament, Category } from '../types';
 import { ALL_CATEGORIES } from '../constants';
+import { DocumentTextIcon } from './icons/DocumentTextIcon';
+import { TrashIcon } from './icons/TrashIcon';
 
 interface TournamentFormProps {
-  onSubmit: (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => void;
+  onSubmit: (data: Omit<Tournament, 'id' | 'status' | 'posterImage' | 'rulesPdfUrl'> & { posterImageFile?: File | null; rulesPdfFile?: File | null; removeRulesPdf?: boolean; }) => void;
   onCancel: () => void;
   initialData?: Tournament | null;
 }
@@ -22,6 +24,9 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const [feminineCategories, setFeminineCategories] = useState<Set<Category>>(new Set());
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null);
   const [posterImageFile, setPosterImageFile] = useState<File | null>(null);
+  const [rulesPdfFile, setRulesPdfFile] = useState<File | null>(null);
+  const [initialRulesPdfUrl, setInitialRulesPdfUrl] = useState<string | null>(null);
+  const [removeRulesPdf, setRemoveRulesPdf] = useState(false);
   
   useEffect(() => {
     if (initialData) {
@@ -36,7 +41,10 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         setMasculineCategories(new Set(initialData.categories.masculine));
         setFeminineCategories(new Set(initialData.categories.feminine));
         setPosterImagePreview(initialData.posterImage);
+        setInitialRulesPdfUrl(initialData.rulesPdfUrl || null);
         setPosterImageFile(null);
+        setRulesPdfFile(null);
+        setRemoveRulesPdf(false);
     } else {
         // Reset form for creation
         setName('');
@@ -51,6 +59,9 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         setFeminineCategories(new Set());
         setPosterImagePreview(null);
         setPosterImageFile(null);
+        setInitialRulesPdfUrl(null);
+        setRulesPdfFile(null);
+        setRemoveRulesPdf(false);
     }
   }, [initialData]);
 
@@ -82,6 +93,31 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
       reader.readAsDataURL(file);
     }
   };
+  
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert('Por favor, sube solo archivos PDF.');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('El archivo PDF es demasiado grande. El tamaño máximo es 5MB.');
+        e.target.value = '';
+        return;
+      }
+      setRulesPdfFile(file);
+      setRemoveRulesPdf(false); // A new file overrides removal
+    }
+  };
+
+  const handleRemovePdf = () => {
+    setRulesPdfFile(null);
+    setRemoveRulesPdf(true); // Flag for removal on submit
+    const input = document.getElementById('rules-upload') as HTMLInputElement;
+    if (input) input.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +136,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
           feminine: Array.from(feminineCategories),
         },
         posterImageFile,
+        rulesPdfFile,
+        removeRulesPdf,
       });
     } else {
       alert('Por favor, completa todos los campos requeridos (nombre, club, descripción, contacto, fechas y al menos una categoría).');
@@ -229,6 +267,32 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
             <span>Subir imagen</span>
             <input id="poster-upload" name="poster-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/png, image/jpeg, image/webp, image/gif" />
           </label>
+        </div>
+      </div>
+      
+       <div>
+        <label className="block text-sm font-medium text-slate-300 mb-1">Reglamento en PDF (Opcional)</label>
+        <div className="mt-2 flex items-center gap-2">
+            <div className="flex-grow flex items-center gap-3 h-11 px-3 bg-slate-700/50 border border-slate-600 rounded-md">
+                <DocumentTextIcon />
+                <span className="text-slate-400 text-sm truncate flex-grow">
+                    {rulesPdfFile?.name || (initialRulesPdfUrl && !removeRulesPdf ? 'Reglamento actual cargado' : 'Ningún archivo seleccionado')}
+                </span>
+                 {(rulesPdfFile || (initialRulesPdfUrl && !removeRulesPdf)) && (
+                    <button
+                        type="button"
+                        onClick={handleRemovePdf}
+                        className="p-1.5 text-slate-400 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-colors flex-shrink-0"
+                        aria-label="Eliminar reglamento"
+                    >
+                        <TrashIcon />
+                    </button>
+                )}
+            </div>
+            <label htmlFor="rules-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-2 px-4 rounded-md transition-colors flex-shrink-0 h-11 flex items-center">
+                <span>{initialRulesPdfUrl && !removeRulesPdf || rulesPdfFile ? 'Cambiar' : 'Subir'}</span>
+                <input id="rules-upload" name="rules-upload" type="file" className="sr-only" onChange={handlePdfChange} accept="application/pdf" />
+            </label>
         </div>
       </div>
 

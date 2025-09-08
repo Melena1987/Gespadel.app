@@ -39,6 +39,7 @@ export interface Tournament {
   };
   posterImage: string | null;
   status: TournamentStatus;
+  rulesPdfUrl?: string | null;
 }
 
 export interface Player {

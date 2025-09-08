@@ -10,6 +10,7 @@ import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { ShareButton } from './ShareButton';
 import { PhoneIcon } from './icons/PhoneIcon';
 import { MailIcon } from './icons/MailIcon';
+import { DocumentDownloadIcon } from './icons/DocumentDownloadIcon';
 
 interface TournamentDetailPageProps {
   tournament: Tournament;
@@ -124,6 +125,21 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 <h2 className="text-xl font-bold text-white mb-3">Descripción</h2>
                 <p className="text-slate-400 whitespace-pre-line">{tournament.description}</p>
             </div>
+
+            {tournament.rulesPdfUrl && (
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold text-white mb-4">Reglamento</h2>
+                    <a 
+                        href={tournament.rulesPdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-3 px-5 py-2.5 font-semibold text-white bg-slate-700 rounded-lg shadow-md hover:bg-slate-600 transition-all"
+                    >
+                        <DocumentDownloadIcon />
+                        <span>Descargar Reglamento (PDF)</span>
+                    </a>
+                </div>
+            )}
 
             <div className="mb-8">
                 <h2 className="text-xl font-bold text-white mb-4">Contacto de la Organización</h2>

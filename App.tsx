@@ -161,24 +161,33 @@ const App: React.FC = () => {
         }
     };
     
-    const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
+    const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage' | 'rulesPdfUrl'> & { posterImageFile?: File | null; rulesPdfFile?: File | null }) => {
         if (!user || player?.role === 'player') return;
         
         try {
             let posterImageUrl: string | null = null;
+            let rulesPdfUrl: string | null = null;
             const newTournamentRef = db.collection('tournaments').doc();
+            
             if (data.posterImageFile) {
                 const storageRef = storage.ref(`posters/${newTournamentRef.id}`);
                 const snapshot = await storageRef.put(data.posterImageFile);
                 posterImageUrl = await snapshot.ref.getDownloadURL();
             }
 
-            const { posterImageFile, ...tournamentData } = data;
+            if (data.rulesPdfFile) {
+                const pdfStorageRef = storage.ref(`rulesPdfs/${newTournamentRef.id}`);
+                const pdfSnapshot = await pdfStorageRef.put(data.rulesPdfFile);
+                rulesPdfUrl = await pdfSnapshot.ref.getDownloadURL();
+            }
+
+            const { posterImageFile, rulesPdfFile, ...tournamentData } = data;
             
             const newTournament: Omit<Tournament, 'id'> = {
                 ...tournamentData,
                 status: 'OPEN',
                 posterImage: posterImageUrl,
+                rulesPdfUrl: rulesPdfUrl,
             };
 
             await newTournamentRef.set(newTournament);
@@ -189,22 +198,37 @@ const App: React.FC = () => {
         }
     };
     
-    const handleUpdateTournament = async (tournamentId: string, data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
+    const handleUpdateTournament = async (tournamentId: string, data: Omit<Tournament, 'id' | 'status' | 'posterImage' | 'rulesPdfUrl'> & { posterImageFile?: File | null; rulesPdfFile?: File | null; removeRulesPdf?: boolean; }) => {
         if (!user || player?.role === 'player') return;
 
         try {
-            let posterImageUrl: string | null = editingTournament?.posterImage || null; // Keep old image by default
-            const { posterImageFile, ...tournamentData } = data;
+            let posterImageUrl: string | null = editingTournament?.posterImage || null;
+            let rulesPdfUrl: string | null = editingTournament?.rulesPdfUrl || null;
+            const { posterImageFile, rulesPdfFile, removeRulesPdf, ...tournamentData } = data;
 
-            if (posterImageFile) { // If a new image is uploaded
+            if (posterImageFile) {
                 const storageRef = storage.ref(`posters/${tournamentId}`);
                 const snapshot = await storageRef.put(posterImageFile);
                 posterImageUrl = await snapshot.ref.getDownloadURL();
+            }
+            
+            const pdfStorageRef = storage.ref(`rulesPdfs/${tournamentId}`);
+            if (rulesPdfFile) {
+                const pdfSnapshot = await pdfStorageRef.put(rulesPdfFile);
+                rulesPdfUrl = await pdfSnapshot.ref.getDownloadURL();
+            } else if (removeRulesPdf && rulesPdfUrl) {
+                try {
+                    await pdfStorageRef.delete();
+                } catch (error: any) {
+                    if (error.code !== 'storage/object-not-found') throw error;
+                }
+                rulesPdfUrl = null;
             }
 
             const updatedTournament = {
                 ...tournamentData,
                 posterImage: posterImageUrl,
+                rulesPdfUrl: rulesPdfUrl,
             };
 
             await db.collection('tournaments').doc(tournamentId).update(updatedTournament);
@@ -230,7 +254,7 @@ const App: React.FC = () => {
         setEditingTournament(null);
     };
     
-    const handleTournamentFormSubmit = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
+    const handleTournamentFormSubmit = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage' | 'rulesPdfUrl'> & { posterImageFile?: File | null; rulesPdfFile?: File | null; removeRulesPdf?: boolean; }) => {
         if (editingTournament) {
             await handleUpdateTournament(editingTournament.id, data);
         } else {
