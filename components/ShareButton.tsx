@@ -39,7 +39,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ tournament, className 
     <div className="relative">
       <button
         onClick={handleShare}
-        className={`flex-shrink-0 flex items-center justify-center p-2.5 bg-slate-700 text-slate-200 rounded-lg shadow-md hover:bg-slate-600 transition-all ${className}`}
+        className={`flex-shrink-0 flex items-center justify-center p-2.5 bg-slate-700/50 text-slate-300 rounded-lg shadow-sm hover:bg-slate-700 transition-all border border-slate-600 hover:border-slate-500 ${className}`}
         aria-label="Compartir torneo"
       >
         <ShareIcon />

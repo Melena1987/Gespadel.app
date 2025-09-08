@@ -133,7 +133,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                         </div>
                       )}
                     <p className="text-sm text-slate-400 mb-4 flex-grow">{t.description}</p>
-                    <div className="mt-auto flex items-center gap-3">
+                    <div className="mt-auto flex items-stretch gap-3">
                         <div className="flex-grow">
                             {activeTab === 'registrations' && registration ? (
                                 t.status === 'OPEN' ? (
