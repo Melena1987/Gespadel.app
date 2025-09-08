@@ -10,6 +10,7 @@ import { AuthModal } from './components/AuthModal';
 import { ProfileModal } from './components/ProfileModal';
 import { Header } from './components/Header';
 import { Modal } from './components/Modal';
+import { PlayerProfileDetailModal } from './components/PlayerProfileDetailModal';
 
 type AppView = 'organizer' | 'player' | 'tournamentDetail';
 
@@ -30,6 +31,7 @@ const App: React.FC = () => {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authRole, setAuthRole] = useState<'player' | 'organizer'>('player');
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
@@ -222,6 +224,13 @@ const App: React.FC = () => {
         }
     };
     
+    const handleViewPlayerProfile = (playerId: string) => {
+        const playerToShow = allPlayers.find(p => p.id === playerId);
+        if (playerToShow) {
+            setViewingPlayer(playerToShow);
+        }
+    };
+
     const navigateBack = () => {
         setSelectedTournament(null);
         // Determine where to go back to
@@ -266,6 +275,7 @@ const App: React.FC = () => {
                     onUpdateTournamentStatus={handleUpdateTournamentStatus}
                     onCreateTournament={handleCreateTournament}
                     onViewTournament={handleViewTournament}
+                    onViewPlayer={handleViewPlayerProfile}
                 />
             );
         }
@@ -312,6 +322,12 @@ const App: React.FC = () => {
                         onClose={() => setIsProfileModalOpen(false)}
                         onSave={handleProfileSave}
                     />
+                </Modal>
+            )}
+            
+            {viewingPlayer && (
+                <Modal isOpen={!!viewingPlayer} onClose={() => setViewingPlayer(null)} size="md">
+                    <PlayerProfileDetailModal player={viewingPlayer} onClose={() => setViewingPlayer(null)} />
                 </Modal>
             )}
         </div>

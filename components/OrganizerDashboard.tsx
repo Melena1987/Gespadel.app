@@ -20,6 +20,7 @@ interface OrganizerDashboardProps {
   onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
   onCreateTournament: (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => void;
   onViewTournament: (tournamentId: string) => void;
+  onViewPlayer: (playerId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -35,7 +36,7 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onUpdateTournamentStatus, onCreateTournament, onViewTournament }) => {
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onUpdateTournamentStatus, onCreateTournament, onViewTournament, onViewPlayer }) => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
@@ -142,6 +143,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                 registrations={registrations.filter(r => r.tournamentId === viewingTournament?.id)}
                 players={players}
                 onClose={handleCloseRegistrationsModal}
+                onViewPlayer={onViewPlayer}
             />
         </Modal>
       )}

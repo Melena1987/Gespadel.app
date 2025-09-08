@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Tournament, Registration, Player, Category } from '../types';
 import { UsersIcon } from './icons/UsersIcon';
+import { ChevronDownIcon } from './icons/ChevronDownIcon';
 
 interface RegistrationsModalProps {
   tournament: Tournament;
   registrations: Registration[];
   players: Player[];
   onClose: () => void;
+  onViewPlayer: (playerId: string) => void;
 }
 
 type GroupedRegistrations = {
@@ -15,8 +17,12 @@ type GroupedRegistrations = {
   };
 };
 
-export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tournament, registrations, players, onClose }) => {
-  const playersMap = new Map(players.map(p => [p.id, p.name]));
+export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tournament, registrations, players, onClose, onViewPlayer }) => {
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategory = (key: string) => {
+    setExpandedCategories(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const tournamentRegistrations = registrations.filter(r => r.tournamentId === tournament.id);
 
@@ -32,30 +38,60 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
     return acc;
   }, {} as GroupedRegistrations);
 
-  const renderCategory = (gender: 'masculine' | 'feminine', category: Category, regs: Registration[]) => (
-    <div key={`${gender}-${category}`} className="mb-6 last:mb-0">
-      <h4 className="text-lg font-semibold text-slate-300 mb-3 border-b border-slate-600 pb-2">{category} Categoría</h4>
-      {regs.length > 0 ? (
-        <ul className="space-y-3">
-          {regs.map((reg, index) => {
-            const player1Name = playersMap.get(reg.player1Id);
-            const player2Name = reg.player2Id ? playersMap.get(reg.player2Id) : null;
-            return (
-              <li key={reg.id} className="flex items-center bg-slate-700/50 p-3 rounded-lg">
-                <span className="text-sm font-mono text-slate-500 mr-4">{index + 1}.</span>
-                <div className="flex-grow text-slate-200">
-                  <p>{player1Name || 'Jugador no encontrado'}</p>
-                  {player2Name && <p className="text-sm text-slate-400">{player2Name}</p>}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="text-slate-500 italic">No hay inscritos en esta categoría.</p>
-      )}
-    </div>
-  );
+  const renderCategory = (gender: 'masculine' | 'feminine', category: Category, regs: Registration[]) => {
+    const key = `${gender}-${category}`;
+    const isExpanded = !!expandedCategories[key];
+
+    return (
+      <div key={key} className="mb-2 last:mb-0 border-b border-slate-700 last:border-b-0 pb-2">
+        <button
+          onClick={() => toggleCategory(key)}
+          className="w-full flex justify-between items-center text-left py-2 px-2 rounded-md hover:bg-slate-700/50 transition-colors"
+          aria-expanded={isExpanded}
+        >
+          <div className="flex items-center">
+            <h4 className="text-lg font-semibold text-slate-300">{category} Categoría</h4>
+            <span className="ml-3 bg-slate-700 text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">{regs.length}</span>
+          </div>
+          <ChevronDownIcon className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
+        {isExpanded && (
+          <div className="pt-2 pl-2">
+            {regs.length > 0 ? (
+              <ul className="space-y-2">
+                {regs.map((reg, index) => {
+                  const player1 = players.find(p => p.id === reg.player1Id);
+                  const player2 = reg.player2Id ? players.find(p => p.id === reg.player2Id) : null;
+                  return (
+                    <li key={reg.id} className="flex items-center bg-slate-700/50 p-2 rounded-lg">
+                      <span className="text-sm font-mono text-slate-500 mr-3">{index + 1}.</span>
+                      <div className="flex-grow text-slate-200 text-sm">
+                        {player1 ? (
+                          <button onClick={() => onViewPlayer(player1.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left">
+                            {player1.name}
+                          </button>
+                        ) : 'Jugador no encontrado'}
+                        {player2 && (
+                          <>
+                            <span className="text-slate-500 mx-1">/</span>
+                            <button onClick={() => onViewPlayer(player2.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left">
+                              {player2.name}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-slate-500 italic px-2 py-2">No hay inscritos en esta categoría.</p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderGenderSection = (gender: 'masculine' | 'feminine', title: string, color: string) => {
     const categories = tournament.categories[gender];
