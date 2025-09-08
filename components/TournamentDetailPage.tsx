@@ -123,7 +123,7 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 <div className="flex items-center gap-3"><UsersIcon /> <span>{registrationCount} inscritos</span></div>
                 {tournament.price > 0 && 
                     <div className="flex items-center gap-3 text-cyan-400 font-bold text-lg">
-                        <CurrencyEuroIcon /> <span>{tournament.price}€ por pareja</span>
+                        <CurrencyEuroIcon /> <span>{tournament.price}€ por pareja</span><span className="text-slate-400 font-normal text-sm ml-2">(pago en el club)</span>
                     </div>
                 }
             </div>

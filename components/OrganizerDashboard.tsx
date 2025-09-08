@@ -105,7 +105,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                                 <div className="flex items-center gap-1.5"><LocationIcon /> {t.clubName}</div>
                                 <div className="flex items-center gap-1.5"><CalendarIcon /> {formatDateRange(t.startDate, t.endDate)}</div>
                                 <div className="flex items-center gap-1.5"><UsersIcon /> {registrationCount} inscritos</div>
-                                {t.price > 0 && <div className="flex items-center gap-1.5 text-cyan-400 font-semibold"><CurrencyEuroIcon /> {t.price}€ / pareja</div>}
+                                {t.price > 0 && <div className="flex items-center gap-1.5 text-cyan-400 font-semibold"><CurrencyEuroIcon /> {t.price}€ / pareja<span className="text-slate-400 font-normal text-xs ml-1">(pago en el club)</span></div>}
                             </div>
                         </div>
                         <div className="flex-shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-2 w-full lg:w-max">

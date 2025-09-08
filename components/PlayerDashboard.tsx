@@ -132,7 +132,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
                         </div>
                          {t.price > 0 &&
                             <div className="flex items-center gap-1.5 text-sm text-cyan-400 font-semibold">
-                                <CurrencyEuroIcon /> {t.price}€ por pareja
+                                <CurrencyEuroIcon /> {t.price}€ por pareja <span className="text-slate-400 font-normal text-xs ml-1">(pago en el club)</span>
                             </div>
                         }
                     </div>
