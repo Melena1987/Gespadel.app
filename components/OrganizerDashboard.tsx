@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { MOCK_REGISTRATIONS, MOCK_PLAYERS } from '../constants';
-import type { Tournament, TournamentStatus } from '../types';
+import type { Tournament, TournamentStatus, Registration, Player } from '../types';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { Modal } from './Modal';
@@ -16,6 +15,8 @@ import { RegistrationsModal } from './RegistrationsModal';
 interface OrganizerDashboardProps {
   onBack: () => void;
   tournaments: Tournament[];
+  registrations: Registration[];
+  players: Player[];
   onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
   onCreateTournament: (data: Omit<Tournament, 'id' | 'status'>) => void;
   onViewTournament: (tournamentId: string) => void;
@@ -34,7 +35,7 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, onUpdateTournamentStatus, onCreateTournament, onViewTournament }) => {
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onUpdateTournamentStatus, onCreateTournament, onViewTournament }) => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
@@ -81,7 +82,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
         <h2 className="text-2xl font-semibold mb-6">Mis Torneos</h2>
         <div className="space-y-4">
             {tournaments.map(t => {
-                const registrationCount = MOCK_REGISTRATIONS.filter(r => r.tournamentId === t.id).length;
+                const registrationCount = registrations.filter(r => r.tournamentId === t.id).length;
                 return (
                     <div key={t.id} className="bg-slate-800/50 rounded-xl p-4 ring-1 ring-white/10 flex flex-col sm:flex-row items-center gap-5">
                         <div className="flex-shrink-0 w-full sm:w-32 h-32 sm:h-20">
@@ -138,8 +139,8 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
         <Modal isOpen={!!viewingTournament} onClose={handleCloseRegistrationsModal} size="2xl">
             <RegistrationsModal
                 tournament={viewingTournament}
-                registrations={MOCK_REGISTRATIONS}
-                players={MOCK_PLAYERS}
+                registrations={registrations.filter(r => r.tournamentId === viewingTournament?.id)}
+                players={players}
                 onClose={handleCloseRegistrationsModal}
             />
         </Modal>
