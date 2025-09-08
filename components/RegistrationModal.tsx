@@ -141,7 +141,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
 
                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${addPartner ? 'max-h-96 mt-4' : 'max-h-0'}`}>
                     <div className="space-y-4 border-l-2 border-violet-500/50 pl-4 ml-2">
-                        <p className="text-sm text-slate-400">...si metes su email se le creará una cuenta automáticamente.</p>
+                        <p className="text-sm text-slate-400">Introduce su email para vincular su cuenta. Si no tiene, se le creará una automáticamente.</p>
                         <div>
                             <label htmlFor="p2-name" className="block text-sm font-medium text-slate-300 mb-1">Nombre y Apellidos (Compañero/a)</label>
                             <input
