@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAoITDs95o0MFzhMt-zAL9REJfBeRUas5c",
   authDomain: "gespadel-app.firebaseapp.com",
   projectId: "gespadel-app",
-  storageBucket: "gespadel-app.appspot.com",
+  storageBucket: "gespadel-app.firebasestorage.app",
   messagingSenderId: "1023199260270",
   appId: "1:1023199260270:web:9454bcaccac5e63d86807f"
 };
