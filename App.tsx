@@ -146,6 +146,14 @@ const App: React.FC = () => {
             window.removeEventListener('hashchange', handleHashChange);
         };
     }, [tournaments, player, organizerPlayerView]);
+    
+    useEffect(() => {
+        if (currentView === 'organizer') {
+            document.body.classList.add('organizer-view');
+        } else {
+            document.body.classList.remove('organizer-view');
+        }
+    }, [currentView]);
 
     const handleLoginRequest = (role: 'player' | 'organizer') => {
         setAuthRole(role);

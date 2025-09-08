@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ player, onLoginRequest, onLogout
 
     return (
         <header className="container mx-auto p-4 sm:p-6 lg:p-8 flex justify-between items-center">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500 logo-gradient">
                 GESPADEL
             </h1>
             <div className="flex items-center gap-4">

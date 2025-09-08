@@ -58,7 +58,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
             <button onClick={onBack} className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
             <ArrowLeftIcon />
             </button>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500 logo-gradient">
                 Panel de Organizador
             </h1>
         </div>
@@ -83,7 +83,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                             <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="w-full h-full object-cover rounded-lg"/>
                             ) : (
                             <div className="w-full h-full bg-slate-900/75 rounded-lg flex items-center justify-center">
-                                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
+                                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500 logo-gradient">
                                         GESPADEL
                                     </span>
                             </div>
