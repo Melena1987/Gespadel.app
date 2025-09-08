@@ -1,3 +1,4 @@
+
 // Fix: Create file content for PlayerDashboard.tsx
 import React, { useState } from 'react';
 import type { Tournament, Player, Registration } from '../types';
@@ -102,15 +103,17 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
               const registration = activeTab === 'registrations' && player ? registrations.find(r => r.tournamentId === t.id && r.player1Id === player.id && r.status !== 'CANCELLED') : null;
               return (
                 <div key={t.id} className="bg-slate-800/50 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-violet-500/10">
-                  {t.posterImage ? (
-                    <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="rounded-t-xl h-48 w-full object-cover"/>
-                  ) : (
-                    <div className="rounded-t-xl h-48 w-full bg-slate-900/75 flex items-center justify-center">
-                      <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
-                        GESPADEL
-                      </span>
-                    </div>
-                  )}
+                  <button onClick={() => onViewTournament(t.id)} className="w-full block focus:outline-none focus:ring-2 focus:ring-inset focus:ring-violet-500 rounded-t-xl cursor-pointer">
+                    {t.posterImage ? (
+                      <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="rounded-t-xl h-48 w-full object-cover"/>
+                    ) : (
+                      <div className="rounded-t-xl h-48 w-full bg-slate-900/75 flex items-center justify-center">
+                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
+                          GESPADEL
+                        </span>
+                      </div>
+                    )}
+                  </button>
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="text-lg font-bold text-white pr-2">

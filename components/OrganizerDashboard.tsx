@@ -78,7 +78,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                 const registrationCount = registrations.filter(r => r.tournamentId === t.id && r.status !== 'CANCELLED').length;
                 return (
                     <div key={t.id} className="bg-slate-800/50 rounded-xl p-4 ring-1 ring-white/10 flex flex-col sm:flex-row items-center gap-5">
-                        <div className="flex-shrink-0 w-full sm:w-32 h-32 sm:h-20">
+                        <button onClick={() => onViewTournament(t.id)} className="flex-shrink-0 w-full sm:w-32 h-32 sm:h-20 block focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 rounded-lg cursor-pointer">
                             {t.posterImage ? (
                             <img src={t.posterImage} alt={`Cartel de ${t.name}`} className="w-full h-full object-cover rounded-lg"/>
                             ) : (
@@ -88,7 +88,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                                     </span>
                             </div>
                             )}
-                        </div>
+                        </button>
                         <div className="flex-grow w-full">
                             <div className="flex items-center gap-4 mb-2">
                             <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${statusStyles[t.status]}`}>{t.status}</span>
