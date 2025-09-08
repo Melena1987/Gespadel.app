@@ -18,6 +18,7 @@ interface OrganizerDashboardProps {
   tournaments: Tournament[];
   onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
   onCreateTournament: (data: Omit<Tournament, 'id' | 'status'>) => void;
+  onViewTournament: (tournamentId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -33,7 +34,7 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, onUpdateTournamentStatus, onCreateTournament }) => {
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, onUpdateTournamentStatus, onCreateTournament, onViewTournament }) => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
@@ -97,7 +98,11 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                         <div className="flex-grow w-full">
                             <div className="flex items-center gap-4 mb-2">
                             <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${statusStyles[t.status]}`}>{t.status}</span>
-                            <h3 className="text-lg font-bold text-white">{t.name}</h3>
+                            <h3 className="text-lg font-bold text-white">
+                                <button onClick={() => onViewTournament(t.id)} className="hover:underline text-left transition-colors hover:text-cyan-400 focus:outline-none focus:text-cyan-400">
+                                    {t.name}
+                                </button>
+                            </h3>
                             </div>
                             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
                                 <div className="flex items-center gap-1.5"><LocationIcon /> {t.clubName}</div>

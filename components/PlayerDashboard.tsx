@@ -1,6 +1,5 @@
 // Fix: Create file content for PlayerDashboard.tsx
 import React, { useState } from 'react';
-import { MOCK_TOURNAMENTS, MOCK_REGISTRATIONS } from '../constants';
 import type { Tournament, Player, Registration } from '../types';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 import { UserCircleIcon } from './icons/UserCircleIcon';
@@ -14,6 +13,11 @@ import { CheckCircleIcon } from './icons/CheckCircleIcon';
 interface PlayerDashboardProps {
   onBack: () => void;
   tournaments: Tournament[];
+  player: Player;
+  registrations: Registration[];
+  onSaveProfile: (player: Player) => void;
+  onRegister: (registrationData: any, tournament: Tournament) => void;
+  onViewTournament: (tournamentId: string) => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -29,22 +33,20 @@ const formatDate = (dateString: string) => {
     });
 }
 
-export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ onBack, tournaments }) => {
-  const [registrations, setRegistrations] = useState<Registration[]>(MOCK_REGISTRATIONS);
+export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
+    onBack,
+    tournaments,
+    player,
+    registrations,
+    onSaveProfile,
+    onRegister,
+    onViewTournament,
+}) => {
   const [activeTab, setActiveTab] = useState<'registrations' | 'search'>(
-    MOCK_REGISTRATIONS.length > 0 ? 'registrations' : 'search'
+    registrations.some(r => r.player1Id === player.id) ? 'registrations' : 'search'
   );
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [player, setPlayer] = useState<Player>({ 
-      id: 'p1', 
-      name: 'Alex Doe', 
-      email: 'alex@example.com', 
-      phone: '611223344',
-      gender: 'masculine',
-      category: '3ª',
-      profilePicture: null
-    });
 
   const handleRegisterClick = (tournament: Tournament) => {
     setSelectedTournament(tournament);
@@ -56,26 +58,13 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ onBack, tourna
 
   const handleRegistrationSubmit = (registrationData: any) => {
     if (!selectedTournament) return;
-    
-    const newRegistration: Registration = {
-        id: `reg${registrations.length + 1}`,
-        tournamentId: selectedTournament.id,
-        player1Id: player.id,
-        player2Id: registrationData.player2 ? `p_temp_${Date.now()}` : undefined, 
-        category: registrationData.category,
-        gender: registrationData.gender,
-        registrationDate: new Date().toISOString(),
-        timePreferences: registrationData.timePreferences,
-    };
-    
-    setRegistrations(prev => [newRegistration, ...prev]);
-    alert(`¡Inscripción para ${registrationData.player1.name} en ${selectedTournament.name} completada!`);
+    onRegister(registrationData, selectedTournament);
     handleCloseModal();
     setActiveTab('registrations');
   };
 
   const handleProfileSave = (updatedPlayer: Player) => {
-    setPlayer(updatedPlayer);
+    onSaveProfile(updatedPlayer);
     setIsProfileModalOpen(false);
   }
   
@@ -145,7 +134,11 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ onBack, tourna
                   )}
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-bold text-white pr-2">{t.name}</h3>
+                        <h3 className="text-lg font-bold text-white pr-2">
+                          <button onClick={() => onViewTournament(t.id)} className="hover:underline text-left transition-colors hover:text-violet-400 focus:outline-none focus:text-violet-400">
+                            {t.name}
+                          </button>
+                        </h3>
                         <span className={`flex-shrink-0 inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[t.status]}`}>{t.status}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-sm text-slate-400 mb-4">
