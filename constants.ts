@@ -9,6 +9,8 @@ export const TOURNAMENT_MODEL: FieldDefinition[] = [
   { name: 'clubName', type: FieldType.TEXT, description: 'Club donde se celebra el torneo.', example: 'Padel Indoor Center' },
   { name: 'startDate', type: FieldType.DATE, description: 'Fecha y hora de inicio del torneo.', example: '2024-08-15T09:00:00' },
   { name: 'endDate', type: FieldType.DATE, description: 'Fecha y hora de finalización.', example: '2024-08-18T20:00:00' },
+  { name: 'contactPhone', type: FieldType.TEXT, description: 'Teléfono de contacto para el torneo.', example: '+34 600 11 22 33' },
+  { name: 'contactEmail', type: FieldType.TEXT, description: 'Email de contacto para el torneo.', example: 'torneo@club.com' },
   { name: 'categories', type: FieldType.OBJECT, description: 'Categorías divididas por género.', example: '{ masculine: ["1ª"], feminine: ["2ª"] }' },
   { name: 'status', type: FieldType.ENUM, description: 'Estado actual del torneo.', example: 'OPEN, IN_PROGRESS, FINISHED' },
 ];

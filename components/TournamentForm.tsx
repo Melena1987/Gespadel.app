@@ -14,6 +14,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const [inscriptionStartDate, setInscriptionStartDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [masculineCategories, setMasculineCategories] = useState<Set<Category>>(new Set());
   const [feminineCategories, setFeminineCategories] = useState<Set<Category>>(new Set());
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && clubName && description && inscriptionStartDate && startDate && endDate && (masculineCategories.size > 0 || feminineCategories.size > 0)) {
+    if (name && clubName && description && inscriptionStartDate && startDate && endDate && contactPhone && contactEmail && (masculineCategories.size > 0 || feminineCategories.size > 0)) {
       onSubmit({
         name,
         clubName,
@@ -58,6 +60,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         inscriptionStartDate,
         startDate,
         endDate,
+        contactPhone,
+        contactEmail,
         categories: {
           masculine: Array.from(masculineCategories),
           feminine: Array.from(feminineCategories),
@@ -65,7 +69,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
         posterImageFile,
       });
     } else {
-      alert('Por favor, completa todos los campos requeridos (nombre, club, descripción, fechas y al menos una categoría).');
+      alert('Por favor, completa todos los campos requeridos (nombre, club, descripción, contacto, fechas y al menos una categoría).');
     }
   };
 
@@ -99,6 +103,33 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
           placeholder="Ej: Padel Club Indoor"
           required
         />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="contactPhone" className="block text-sm font-medium text-slate-300 mb-1">Teléfono de Contacto</label>
+            <input
+              type="tel"
+              id="contactPhone"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+              placeholder="Ej: 600123456"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="contactEmail" className="block text-sm font-medium text-slate-300 mb-1">Email de Contacto</label>
+            <input
+              type="email"
+              id="contactEmail"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+              placeholder="Ej: info@clubpadel.com"
+              required
+            />
+          </div>
       </div>
 
       <div>

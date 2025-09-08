@@ -31,6 +31,8 @@ export interface Tournament {
   inscriptionStartDate: string;
   startDate: string;
   endDate: string;
+  contactPhone: string;
+  contactEmail: string;
   categories: {
     masculine: Category[];
     feminine: Category[];

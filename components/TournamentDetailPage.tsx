@@ -8,6 +8,8 @@ import { Modal } from './Modal';
 import { RegistrationModal } from './RegistrationModal';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { ShareButton } from './ShareButton';
+import { PhoneIcon } from './icons/PhoneIcon';
+import { MailIcon } from './icons/MailIcon';
 
 interface TournamentDetailPageProps {
   tournament: Tournament;
@@ -121,6 +123,20 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
             <div className="mb-8">
                 <h2 className="text-xl font-bold text-white mb-3">Descripción</h2>
                 <p className="text-slate-400 whitespace-pre-line">{tournament.description}</p>
+            </div>
+
+            <div className="mb-8">
+                <h2 className="text-xl font-bold text-white mb-4">Contacto de la Organización</h2>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4 text-slate-300">
+                        <PhoneIcon />
+                        <a href={`tel:${tournament.contactPhone}`} className="hover:text-cyan-400 transition-colors">{tournament.contactPhone}</a>
+                    </div>
+                    <div className="flex items-center gap-4 text-slate-300">
+                        <MailIcon />
+                        <a href={`mailto:${tournament.contactEmail}`} className="hover:text-cyan-400 transition-colors">{tournament.contactEmail}</a>
+                    </div>
+                </div>
             </div>
 
             <div>
