@@ -10,6 +10,7 @@ interface AuthModalProps {
   onClose: () => void;
   role: 'player' | 'organizer';
   onAuthSuccess: () => void;
+  onOpenTerms: () => void;
 }
 
 const GoogleIcon = () => (
@@ -18,12 +19,13 @@ const GoogleIcon = () => (
     </svg>
 );
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onAuthSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onAuthSuccess, onOpenTerms }) => {
   const [isLoginView, setIsLoginView] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleClose = () => {
     setEmail('');
@@ -31,15 +33,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onA
     setError(null);
     setLoading(false);
     setIsLoginView(true);
+    setTermsAccepted(false);
     onClose();
   };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
     if (role === 'player') {
+        if (!termsAccepted) {
+            setError('Debes aceptar los términos y condiciones para continuar.');
+            return;
+        }
+        setLoading(true);
         try {
             const methods = await auth.fetchSignInMethodsForEmail(email);
             if (methods.includes('password')) {
@@ -91,6 +98,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onA
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    if (!termsAccepted) {
+        setError('Debes aceptar los términos y condiciones para continuar.');
+        return;
+    }
     setLoading(true);
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
@@ -112,25 +123,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onA
 
       {error && <p className="bg-red-900/50 border border-red-500/30 text-red-300 p-3 rounded-md mb-4 text-sm">{error}</p>}
 
-      <button
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-slate-800 bg-white rounded-lg shadow-md hover:bg-slate-200 transition-all mb-4 disabled:opacity-50"
-      >
-          <GoogleIcon />
-          Continuar con Google
-      </button>
-
-      <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-              <div className="w-full border-t border-slate-700" />
-          </div>
-          <div className="relative flex justify-center">
-              <span className="bg-slate-800 px-2 text-sm text-slate-400">o</span>
-          </div>
-      </div>
-
       <form onSubmit={handleAuth} className="space-y-4">
+          <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading || !termsAccepted}
+              className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-slate-800 bg-white rounded-lg shadow-md hover:bg-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+              <GoogleIcon />
+              Continuar con Google
+          </button>
+
+          <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-slate-700" />
+              </div>
+              <div className="relative flex justify-center">
+                  <span className="bg-slate-800 px-2 text-sm text-slate-400">o</span>
+              </div>
+          </div>
+          
           <div>
               <label htmlFor="email-player" className="sr-only">Email</label>
               <input
@@ -155,10 +167,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, role, onA
                   required
               />
           </div>
+
+          <div className="flex items-start pt-2">
+            <input
+                id="terms-checkbox"
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="form-checkbox h-4 w-4 text-cyan-600 bg-slate-800 border-slate-500 rounded focus:ring-cyan-500 mt-1"
+            />
+            <label htmlFor="terms-checkbox" className="ml-3 text-sm text-slate-400">
+                He leído y acepto los{' '}
+                <button
+                    type="button"
+                    onClick={onOpenTerms}
+                    className="font-semibold text-cyan-400 hover:underline focus:outline-none focus:underline"
+                >
+                    términos y condiciones
+                </button>.
+            </label>
+          </div>
+
           <button
               type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all disabled:opacity-50"
+              disabled={loading || !termsAccepted}
+              className="w-full flex items-center justify-center gap-3 px-8 py-3 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
               <MailIcon />
               {loading ? 'Procesando...' : 'Continuar con Email'}
