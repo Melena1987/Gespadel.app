@@ -11,6 +11,7 @@ import { ClipboardListIcon } from './icons/ClipboardListIcon';
 import { LockClosedIcon } from './icons/LockClosedIcon';
 import { RegistrationsModal } from './RegistrationsModal';
 import { PencilIcon } from './icons/PencilIcon';
+import { TrashIcon } from './icons/TrashIcon';
 
 
 interface OrganizerDashboardProps {
@@ -21,6 +22,7 @@ interface OrganizerDashboardProps {
   onCloseRegistrationsRequest: (tournamentId: string) => void;
   onCreateTournamentRequest: () => void;
   onEditTournament: (tournament: Tournament) => void;
+  onDeleteTournamentRequest: (tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
   onViewPlayer: (playerId: string) => void;
   onCancelRegistration: (registrationId: string) => void;
@@ -39,7 +41,7 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onCloseRegistrationsRequest, onCreateTournamentRequest, onEditTournament, onViewTournament, onViewPlayer, onCancelRegistration }) => {
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onCloseRegistrationsRequest, onCreateTournamentRequest, onEditTournament, onDeleteTournamentRequest, onViewTournament, onViewPlayer, onCancelRegistration }) => {
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
   const handleViewRegistrations = (tournament: Tournament) => {
@@ -104,16 +106,23 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                                 <div className="flex items-center gap-1.5"><UsersIcon /> {registrationCount} inscritos</div>
                             </div>
                         </div>
-                        <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full lg:w-max">
+                        <div className="flex-shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-2 w-full lg:w-max">
                             <button onClick={() => onEditTournament(t)} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><PencilIcon /> Editar</button>
                             <button onClick={() => handleViewRegistrations(t)} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><ClipboardListIcon /> Inscripciones</button>
                             <button 
                                 onClick={() => onCloseRegistrationsRequest(t.id)} 
                                 disabled={t.status !== 'OPEN'}
-                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors sm:col-span-2 lg:col-span-1 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
+                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
                             >
                                 <LockClosedIcon /> 
                                 {t.status === 'OPEN' ? 'Cerrar' : 'Cerrado'}
+                            </button>
+                            <button 
+                                onClick={() => onDeleteTournamentRequest(t)}
+                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-red-900/50 text-red-400 hover:bg-red-900/75 rounded-md transition-colors"
+                            >
+                                <TrashIcon /> 
+                                Eliminar
                             </button>
                         </div>
                     </div>

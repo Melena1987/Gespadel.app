@@ -47,6 +47,7 @@ const App: React.FC = () => {
 
     const [registrationToCancel, setRegistrationToCancel] = useState<string | null>(null);
     const [tournamentToClose, setTournamentToClose] = useState<string | null>(null);
+    const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
     const [showCookieConsent, setShowCookieConsent] = useState(false);
     const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -271,6 +272,59 @@ const App: React.FC = () => {
         }
     };
     
+    const handleDeleteTournamentRequest = (tournament: Tournament) => {
+        setTournamentToDelete(tournament);
+    };
+
+    const confirmDeleteTournament = async () => {
+        if (!tournamentToDelete) return;
+        const tournamentId = tournamentToDelete.id;
+
+        try {
+            // 1. Delete associated registrations
+            const registrationsQuery = await db.collection('registrations').where('tournamentId', '==', tournamentId).get();
+            const batch = db.batch();
+            registrationsQuery.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+
+            // 2. Delete poster image from Storage if it exists
+            if (tournamentToDelete.posterImage) {
+                try {
+                    const posterRef = storage.refFromURL(tournamentToDelete.posterImage);
+                    await posterRef.delete();
+                } catch (error: any) {
+                    if (error.code !== 'storage/object-not-found') {
+                        console.error("Error deleting poster image:", error);
+                    }
+                }
+            }
+
+            // 3. Delete rules PDF from Storage if it exists
+            if (tournamentToDelete.rulesPdfUrl) {
+                try {
+                    const pdfRef = storage.refFromURL(tournamentToDelete.rulesPdfUrl);
+                    await pdfRef.delete();
+                } catch (error: any) {
+                    if (error.code !== 'storage/object-not-found') {
+                        console.error("Error deleting rules PDF:", error);
+                    }
+                }
+            }
+
+            // 4. Delete the tournament document
+            await db.collection('tournaments').doc(tournamentId).delete();
+            addNotification('Torneo eliminado correctamente.', 'success');
+
+        } catch (error) {
+            console.error("Error al eliminar el torneo:", error);
+            addNotification("Error al eliminar el torneo. Por favor, inténtalo de nuevo.", 'error');
+        } finally {
+            setTournamentToDelete(null);
+        }
+    };
+
     const handleOpenCreateForm = () => {
         setEditingTournament(null);
         setIsTournamentFormOpen(true);
@@ -447,6 +501,7 @@ const App: React.FC = () => {
                     onCloseRegistrationsRequest={requestCloseRegistrations}
                     onCreateTournamentRequest={handleOpenCreateForm}
                     onEditTournament={handleOpenEditForm}
+                    onDeleteTournamentRequest={handleDeleteTournamentRequest}
                     onViewTournament={handleViewTournament}
                     onViewPlayer={handleViewPlayerProfile}
                     onCancelRegistration={handleCancelRegistrationRequest}
@@ -534,6 +589,16 @@ const App: React.FC = () => {
                 message="¿Estás seguro de que quieres cerrar las inscripciones para este torneo? Esta acción no se puede deshacer."
                 confirmText="Cerrar Inscripciones"
                 confirmButtonClass="bg-orange-600 hover:bg-orange-700"
+            />
+            
+            <ConfirmationModal
+                isOpen={!!tournamentToDelete}
+                onClose={() => setTournamentToDelete(null)}
+                onConfirm={confirmDeleteTournament}
+                title="Confirmar Eliminación"
+                message={`¿Estás seguro de que quieres eliminar el torneo "${tournamentToDelete?.name}"? Esta acción es irreversible y eliminará todas las inscripciones asociadas.`}
+                confirmText="Eliminar Torneo"
+                confirmButtonClass="bg-red-600 hover:bg-red-700"
             />
 
             <Modal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} size="3xl">
