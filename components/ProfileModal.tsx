@@ -7,7 +7,7 @@ import { ProfilePicturePlaceholder } from './icons/ProfilePicturePlaceholder';
 interface ProfileModalProps {
   player: Player;
   onClose: () => void;
-  onSave: (player: Player) => void;
+  onSave: (player: Player, profilePictureFile?: File | null) => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onSave }) => {
@@ -16,14 +16,20 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onS
   const [phone, setPhone] = useState(player.phone);
   const [gender, setGender] = useState(player.gender);
   const [category, setCategory] = useState(player.category);
-  const [profilePicture, setProfilePicture] = useState(player.profilePicture);
+  const [profilePicturePreview, setProfilePicturePreview] = useState(player.profilePicture);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+          alert('La imagen es demasiado grande. El tamaño máximo es 2MB.');
+          return;
+      }
+      setProfilePictureFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfilePicture(reader.result as string);
+        setProfilePicturePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -32,7 +38,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ ...player, name, email, phone, gender, category, profilePicture });
+    onSave({ ...player, name, email, phone, gender, category }, profilePictureFile);
   };
 
   return (
@@ -41,8 +47,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ player, onClose, onS
       
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
-            {profilePicture ? (
-                 <img src={profilePicture} alt="Foto de perfil" className="h-24 w-24 rounded-full object-cover ring-2 ring-slate-600" />
+            {profilePicturePreview ? (
+                 <img src={profilePicturePreview} alt="Foto de perfil" className="h-24 w-24 rounded-full object-cover ring-2 ring-slate-600" />
             ) : (
                 <div className="h-24 w-24 rounded-full bg-slate-700 flex items-center justify-center ring-1 ring-slate-600">
                     <ProfilePicturePlaceholder />

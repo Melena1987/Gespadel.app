@@ -18,7 +18,7 @@ interface OrganizerDashboardProps {
   registrations: Registration[];
   players: Player[];
   onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
-  onCreateTournament: (data: Omit<Tournament, 'id' | 'status'>) => void;
+  onCreateTournament: (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => void;
   onViewTournament: (tournamentId: string) => void;
 }
 
@@ -39,7 +39,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
 
-  const handleCreateTournament = (data: Omit<Tournament, 'id' | 'status'>) => {
+  const handleCreateTournament = (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
     onCreateTournament(data);
     setIsFormModalOpen(false);
   };

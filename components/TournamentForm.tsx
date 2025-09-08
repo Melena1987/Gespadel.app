@@ -3,7 +3,7 @@ import type { Tournament, Category } from '../types';
 import { ALL_CATEGORIES } from '../constants';
 
 interface TournamentFormProps {
-  onSubmit: (data: Omit<Tournament, 'id' | 'status'>) => void;
+  onSubmit: (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => void;
   onCancel: () => void;
 }
 
@@ -16,7 +16,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const [endDate, setEndDate] = useState('');
   const [masculineCategories, setMasculineCategories] = useState<Set<Category>>(new Set());
   const [feminineCategories, setFeminineCategories] = useState<Set<Category>>(new Set());
-  const [posterImage, setPosterImage] = useState<string | null>(null);
+  const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null);
+  const [posterImageFile, setPosterImageFile] = useState<File | null>(null);
 
   const handleCategoryChange = (category: Category, gender: 'masculine' | 'feminine') => {
     const setCategories = gender === 'masculine' ? setMasculineCategories : setFeminineCategories;
@@ -34,9 +35,14 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('La imagen es demasiado grande. El tamaño máximo es 5MB.');
+        return;
+      }
+      setPosterImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPosterImage(reader.result as string);
+        setPosterImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -56,7 +62,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
           masculine: Array.from(masculineCategories),
           feminine: Array.from(feminineCategories),
         },
-        posterImage,
+        posterImageFile,
       });
     } else {
       alert('Por favor, completa todos los campos requeridos (nombre, club, descripción, fechas y al menos una categoría).');
@@ -148,8 +154,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
        <div>
         <label className="block text-sm font-medium text-slate-300 mb-1">Cartel del Torneo (Opcional)</label>
         <div className="mt-2 flex items-center gap-4">
-          {posterImage ? (
-            <img src={posterImage} alt="Vista previa del cartel" className="h-20 w-20 rounded-md object-cover ring-2 ring-slate-600" />
+          {posterImagePreview ? (
+            <img src={posterImagePreview} alt="Vista previa del cartel" className="h-20 w-20 rounded-md object-cover ring-2 ring-slate-600" />
           ) : (
             <div className="h-20 w-20 rounded-md bg-slate-700/50 flex items-center justify-center text-slate-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

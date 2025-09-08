@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import firebase from 'firebase/compat/app';
-import { auth, db } from './firebase';
+import { auth, db, storage } from './firebase';
 import type { Tournament, Player, Registration, TournamentStatus, Category } from './types';
 
 import { OrganizerDashboard } from './components/OrganizerDashboard';
@@ -99,15 +99,55 @@ const App: React.FC = () => {
         await auth.signOut();
     };
 
-    const handleSaveProfile = async (updatedPlayer: Player) => {
+    const handleSaveProfile = async (updatedPlayer: Player, profilePictureFile?: File | null) => {
         if (!playerProfile) return;
-        await db.collection('players').doc(playerProfile.id).set(updatedPlayer, { merge: true });
-        setPlayerProfile(updatedPlayer);
+
+        let playerToSave = { ...updatedPlayer };
+
+        if (profilePictureFile) {
+            try {
+                const filePath = `players/${playerProfile.id}/profilePicture_${Date.now()}`;
+                const fileRef = storage.ref().child(filePath);
+                await fileRef.put(profilePictureFile);
+                const imageUrl = await fileRef.getDownloadURL();
+                playerToSave.profilePicture = imageUrl;
+            } catch (error) {
+                console.error("Error uploading profile picture: ", error);
+                alert("Hubo un error al subir la foto de perfil.");
+                return;
+            }
+        }
+        
+        await db.collection('players').doc(playerProfile.id).set(playerToSave, { merge: true });
+        setPlayerProfile(playerToSave);
         setIsProfileModalOpen(false);
     };
 
-    const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status'>) => {
-        await db.collection('tournaments').add({ ...data, status: 'OPEN' });
+    const handleCreateTournament = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
+        let imageUrl: string | null = null;
+        const tournamentRef = db.collection('tournaments').doc();
+
+        if (data.posterImageFile) {
+            try {
+                const file = data.posterImageFile;
+                const filePath = `tournaments/${tournamentRef.id}/${file.name}`;
+                const fileRef = storage.ref().child(filePath);
+                await fileRef.put(file);
+                imageUrl = await fileRef.getDownloadURL();
+            } catch (error) {
+                console.error("Error uploading tournament poster: ", error);
+                alert("Hubo un error al subir el cartel del torneo.");
+                return;
+            }
+        }
+
+        const { posterImageFile, ...tournamentData } = data;
+
+        await tournamentRef.set({ 
+            ...tournamentData, 
+            posterImage: imageUrl, 
+            status: 'OPEN' 
+        });
     };
 
     const handleUpdateTournamentStatus = async (tournamentId: string, newStatus: TournamentStatus) => {
