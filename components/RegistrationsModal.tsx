@@ -62,6 +62,8 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
                 {regs.map((reg, index) => {
                   const player1 = players.find(p => p.id === reg.player1Id);
                   const player2 = reg.player2Id ? players.find(p => p.id === reg.player2Id) : null;
+                  const player2Name = player2 ? player2.name : reg.player2Name;
+
                   return (
                     <li key={reg.id} className="flex items-center bg-slate-700/50 p-2 rounded-lg">
                       <span className="text-sm font-mono text-slate-500 mr-3">{index + 1}.</span>
@@ -71,12 +73,16 @@ export const RegistrationsModal: React.FC<RegistrationsModalProps> = ({ tourname
                             {player1.name}
                           </button>
                         ) : 'Jugador no encontrado'}
-                        {player2 && (
+                        {player2Name && (
                           <>
                             <span className="text-slate-500 mx-1">/</span>
-                            <button onClick={() => onViewPlayer(player2.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left">
-                              {player2.name}
-                            </button>
+                            {player2 ? (
+                                <button onClick={() => onViewPlayer(player2.id)} className="hover:underline hover:text-cyan-400 transition-colors text-left">
+                                  {player2.name}
+                                </button>
+                            ) : (
+                                <span className="text-slate-300">{player2Name}</span>
+                            )}
                           </>
                         )}
                       </div>

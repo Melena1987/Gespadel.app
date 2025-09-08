@@ -60,6 +60,8 @@ export interface Registration {
     tournamentId: string;
     player1Id: string;
     player2Id?: string;
+    player2Name?: string;
+    player2Phone?: string;
     category: Category;
     gender: 'masculine' | 'feminine';
     registrationDate: string;

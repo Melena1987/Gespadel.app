@@ -55,8 +55,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
             return;
         }
 
-        if (addPartner && (!player2Name || !player2Email || !player2Phone)) {
-             setError('Debes completar todos los datos de tu compañero/a.');
+        if (addPartner && !player2Name) {
+             setError('Debes completar al menos el nombre de tu compañero/a.');
              return;
         }
 
@@ -141,7 +141,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
 
                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${addPartner ? 'max-h-96 mt-4' : 'max-h-0'}`}>
                     <div className="space-y-4 border-l-2 border-violet-500/50 pl-4 ml-2">
-                        <p className="text-sm text-slate-400">Introduce los datos de tu pareja. Si no tiene cuenta, se le creará una automáticamente.</p>
+                        <p className="text-sm text-slate-400">...si metes su email se le creará una cuenta automáticamente.</p>
                         <div>
                             <label htmlFor="p2-name" className="block text-sm font-medium text-slate-300 mb-1">Nombre y Apellidos (Compañero/a)</label>
                             <input
@@ -162,8 +162,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
                                 value={player2Email}
                                 onChange={(e) => setPlayer2Email(e.target.value)}
                                 className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 focus:ring-2 focus:ring-cyan-500 outline-none"
-                                placeholder="email@ejemplo.com"
-                                required={addPartner}
+                                placeholder="email@ejemplo.com (opcional)"
                             />
                         </div>
                         <div>
@@ -174,8 +173,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ player, to
                                 value={player2Phone}
                                 onChange={(e) => setPlayer2Phone(e.target.value)}
                                 className="w-full bg-slate-700/50 border border-slate-600 rounded-md py-2 px-3 focus:ring-2 focus:ring-cyan-500 outline-none"
-                                placeholder="600123456"
-                                required={addPartner}
+                                placeholder="600123456 (opcional)"
                             />
                         </div>
                     </div>

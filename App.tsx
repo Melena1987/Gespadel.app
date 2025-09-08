@@ -166,48 +166,50 @@ const App: React.FC = () => {
             alert("Debes iniciar sesión para inscribirte.");
             return;
         }
-        
+    
         try {
-            let player2Id: string | undefined = undefined;
-
-            // Handle player 2 creation/lookup
-            if (registrationData.player2 && registrationData.player2.email) {
-                 // Prevent registering yourself as player 2
-                if (registrationData.player2.email === player.email) {
-                    alert("No puedes inscribirte a ti mismo como tu compañero/a.");
-                    return;
-                }
-                
-                // Check if player 2 already exists
-                const player2Query = await db.collection('players').where('email', '==', registrationData.player2.email).limit(1).get();
-                if (!player2Query.empty) {
-                    player2Id = player2Query.docs[0].id;
-                } else {
-                    // Create new player for player 2
-                    const newPlayer2Ref = await db.collection('players').add({
-                        name: registrationData.player2.name,
-                        email: registrationData.player2.email,
-                        phone: registrationData.player2.phone,
-                        role: 'player', // Partners are always created with 'player' role
-                    });
-                    player2Id = newPlayer2Ref.id;
-                }
-            }
-
             const { player2, ...restOfData } = registrationData;
-
-            const newRegistrationData = {
+    
+            const newRegistrationData: Omit<Registration, 'id'> = {
                 ...restOfData,
                 tournamentId: tournament.id,
                 player1Id: player.id,
                 registrationDate: new Date().toISOString(),
             };
-
-            // Add player2Id only if it exists
-            if (player2Id) {
-                (newRegistrationData as any).player2Id = player2Id;
+    
+            // Handle player 2
+            if (player2 && player2.name) {
+                // If email is provided, create/find player and add player2Id
+                if (player2.email) {
+                    if (player2.email === player.email) {
+                        alert("No puedes inscribirte a ti mismo como tu compañero/a.");
+                        return;
+                    }
+    
+                    let player2Id: string | undefined = undefined;
+                    const player2Query = await db.collection('players').where('email', '==', player2.email).limit(1).get();
+                    if (!player2Query.empty) {
+                        player2Id = player2Query.docs[0].id;
+                    } else {
+                        // Create new player for player 2
+                        const newPlayer2Ref = await db.collection('players').add({
+                            name: player2.name,
+                            email: player2.email,
+                            phone: player2.phone || '',
+                            role: 'player',
+                        });
+                        player2Id = newPlayer2Ref.id;
+                    }
+                    newRegistrationData.player2Id = player2Id;
+                } else {
+                    // If no email, just store the name and phone in the registration document
+                    newRegistrationData.player2Name = player2.name;
+                    if (player2.phone) {
+                        newRegistrationData.player2Phone = player2.phone;
+                    }
+                }
             }
-
+    
             await db.collection('registrations').add(newRegistrationData);
             alert('¡Inscripción realizada con éxito!');
         } catch (error) {
