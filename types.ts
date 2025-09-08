@@ -47,6 +47,7 @@ export interface Player {
   gender?: 'masculine' | 'feminine';
   category?: Category;
   profilePicture?: string | null;
+  role: 'player' | 'organizer';
 }
 
 export interface TimeSlot {

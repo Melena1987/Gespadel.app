@@ -12,9 +12,10 @@ import { ShareIcon } from './icons/ShareIcon';
 interface TournamentDetailPageProps {
   tournament: Tournament;
   onBack: () => void;
-  player: Player;
+  player: Player | null;
   registrations: Registration[];
   onRegister: (registrationData: any, tournament: Tournament) => void;
+  onLoginRequest: () => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -36,12 +37,12 @@ const CategoryPill: React.FC<{category: Category, gender: 'masculine' | 'feminin
     return <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${color}`}>{category}</span>;
 }
 
-export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tournament, onBack, player, registrations, onRegister }) => {
+export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tournament, onBack, player, registrations, onRegister, onLoginRequest }) => {
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const [shareFeedback, setShareFeedback] = useState('');
 
   const registrationCount = registrations.filter(r => r.tournamentId === tournament.id).length;
-  const isRegistered = registrations.some(r => r.tournamentId === tournament.id && r.player1Id === player.id);
+  const isRegistered = player ? registrations.some(r => r.tournamentId === tournament.id && r.player1Id === player.id) : false;
   const canRegister = tournament.status === 'OPEN' && !isRegistered;
 
   const handleRegistrationSubmit = (registrationData: any) => {
@@ -49,33 +50,36 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
     setIsRegistrationModalOpen(false);
   };
   
+  const handleRegisterClick = () => {
+    if (!canRegister) return;
+
+    if (!player) {
+      onLoginRequest();
+    } else {
+      setIsRegistrationModalOpen(true);
+    }
+  };
+
   const handleShare = async () => {
-    const shareUrl = window.location.href; // Using current URL as a placeholder
-    const shareData = {
-        title: tournament.name,
-        text: `${tournament.description}\n\n¡Inscríbete aquí!`,
-        url: shareUrl,
-    };
+    const shareUrl = window.location.href;
+    const shareData = { title: tournament.name, text: `${tournament.description}\n\n¡Inscríbete aquí!`, url: shareUrl };
 
     if (navigator.share) {
         try {
             await navigator.share(shareData);
-        } catch (error) {
-            console.error('Error al compartir:', error);
-        }
+        } catch (error) { console.error('Error al compartir:', error); }
     } else {
-        // Fallback for browsers without Web Share API
         try {
             await navigator.clipboard.writeText(shareUrl);
             setShareFeedback('¡Enlace copiado al portapapeles!');
-            setTimeout(() => setShareFeedback(''), 3000); // Clear feedback after 3 seconds
+            setTimeout(() => setShareFeedback(''), 3000);
         } catch (error) {
             console.error('Error al copiar el enlace:', error);
             setShareFeedback('No se pudo copiar el enlace.');
             setTimeout(() => setShareFeedback(''), 3000);
         }
     }
-};
+  };
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -87,15 +91,12 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Column */}
         <div className="md:col-span-1 space-y-4">
             {tournament.posterImage ? (
                 <img src={tournament.posterImage} alt={`Cartel de ${tournament.name}`} className="w-full object-cover rounded-xl shadow-lg ring-1 ring-white/10"/>
             ) : (
                 <div className="w-full aspect-[3/4] bg-slate-800/50 rounded-xl flex items-center justify-center ring-1 ring-white/10">
-                    <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
-                        GESPADEL
-                    </span>
+                    <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">GESPADEL</span>
                 </div>
             )}
             
@@ -106,33 +107,18 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                       <span>Inscrito</span>
                   </div>
               ) : (
-                  <button
-                      onClick={() => canRegister && setIsRegistrationModalOpen(true)}
-                      disabled={!canRegister}
-                      className="w-full px-6 py-3 font-semibold text-lg text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition-all disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400"
-                  >
+                  <button onClick={handleRegisterClick} disabled={!canRegister} className="w-full px-6 py-3 font-semibold text-lg text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 transition-all disabled:bg-slate-600 disabled:cursor-not-allowed disabled:text-slate-400">
                       {tournament.status === 'OPEN' ? 'Inscribirme Ahora' : 'Inscripciones Cerradas'}
                   </button>
               )}
-
-              <button
-                onClick={handleShare}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold text-lg bg-slate-700 text-slate-200 rounded-lg shadow-md hover:bg-slate-600 transition-all"
-                aria-label="Compartir torneo"
-              >
+              <button onClick={handleShare} className="w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold text-lg bg-slate-700 text-slate-200 rounded-lg shadow-md hover:bg-slate-600 transition-all" aria-label="Compartir torneo">
                 <ShareIcon />
                 <span>Compartir</span>
               </button>
             </div>
-             {shareFeedback && (
-                <p className="text-center text-sm text-green-400 transition-opacity duration-300" role="status">
-                    {shareFeedback}
-                </p>
-            )}
-
+             {shareFeedback && (<p className="text-center text-sm text-green-400 transition-opacity duration-300" role="status">{shareFeedback}</p>)}
         </div>
 
-        {/* Right Column */}
         <div className="md:col-span-2">
             <div className="flex items-center gap-4 mb-3">
                 <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${statusStyles[tournament.status]}`}>{tournament.status}</span>
@@ -156,24 +142,20 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                     {tournament.categories.masculine.length > 0 && (
                         <div>
                             <h3 className="font-semibold text-cyan-400 mb-2">Masculinas</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {tournament.categories.masculine.map(cat => <CategoryPill key={`m-${cat}`} category={cat} gender="masculine" />)}
-                            </div>
+                            <div className="flex flex-wrap gap-2">{tournament.categories.masculine.map(cat => <CategoryPill key={`m-${cat}`} category={cat} gender="masculine" />)}</div>
                         </div>
                     )}
                      {tournament.categories.feminine.length > 0 && (
                         <div>
                             <h3 className="font-semibold text-pink-400 mb-2">Femeninas</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {tournament.categories.feminine.map(cat => <CategoryPill key={`f-${cat}`} category={cat} gender="feminine" />)}
-                            </div>
+                            <div className="flex flex-wrap gap-2">{tournament.categories.feminine.map(cat => <CategoryPill key={`f-${cat}`} category={cat} gender="feminine" />)}</div>
                         </div>
                     )}
                 </div>
             </div>
         </div>
       </div>
-       {isRegistrationModalOpen && (
+       {isRegistrationModalOpen && player && (
         <Modal isOpen={isRegistrationModalOpen} onClose={() => setIsRegistrationModalOpen(false)} size="2xl">
           <RegistrationModal 
             player={player}

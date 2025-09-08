@@ -1,23 +1,19 @@
 // Fix: Create file content for PlayerDashboard.tsx
 import React, { useState } from 'react';
 import type { Tournament, Player, Registration } from '../types';
-import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
-import { UserCircleIcon } from './icons/UserCircleIcon';
 import { Modal } from './Modal';
 import { RegistrationModal } from './RegistrationModal';
-import { ProfileModal } from './ProfileModal';
 import { LocationIcon } from './icons/LocationIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 
 interface PlayerDashboardProps {
-  onBack: () => void;
   tournaments: Tournament[];
-  player: Player;
+  player: Player | null;
   registrations: Registration[];
-  onSaveProfile: (player: Player) => void;
   onRegister: (registrationData: any, tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
+  onLoginRequest: () => void;
 }
 
 const statusStyles: Record<Tournament['status'], string> = {
@@ -34,22 +30,24 @@ const formatDate = (dateString: string) => {
 }
 
 export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
-    onBack,
     tournaments,
     player,
     registrations,
-    onSaveProfile,
     onRegister,
     onViewTournament,
+    onLoginRequest,
 }) => {
-  const [activeTab, setActiveTab] = useState<'registrations' | 'search'>(
-    registrations.some(r => r.player1Id === player.id) ? 'registrations' : 'search'
-  );
+  const defaultTab = player && registrations.some(r => r.player1Id === player.id) ? 'registrations' : 'search';
+  const [activeTab, setActiveTab] = useState<'registrations' | 'search'>(defaultTab);
+  
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleRegisterClick = (tournament: Tournament) => {
-    setSelectedTournament(tournament);
+    if (!player) {
+      onLoginRequest();
+    } else {
+      setSelectedTournament(tournament);
+    }
   };
 
   const handleCloseModal = () => {
@@ -62,42 +60,20 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
     handleCloseModal();
     setActiveTab('registrations');
   };
-
-  const handleProfileSave = (updatedPlayer: Player) => {
-    onSaveProfile(updatedPlayer);
-    setIsProfileModalOpen(false);
-  }
   
-  const registeredTournamentIds = new Set(registrations.filter(r => r.player1Id === player.id).map(r => r.tournamentId));
+  const registeredTournamentIds = new Set(registrations.filter(r => player && r.player1Id === player.id).map(r => r.tournamentId));
   const registeredTournaments = tournaments.filter(t => registeredTournamentIds.has(t.id));
   const availableTournaments = tournaments.filter(t => !registeredTournamentIds.has(t.id));
   
   const tournamentsToShow = activeTab === 'registrations' ? registeredTournaments : availableTournaments;
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <header className="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
-        <div className="flex items-center gap-4">
-            <button onClick={onBack} className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                <ArrowLeftIcon />
-            </button>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-500">
-                Panel de Jugador
-            </h1>
-        </div>
-        <button
-          onClick={() => setIsProfileModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2 font-semibold text-white bg-slate-700 rounded-lg hover:bg-slate-600 transition-all w-full sm:w-auto"
-        >
-          <UserCircleIcon />
-          <span>Mi Perfil</span>
-        </button>
-      </header>
-
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="mb-6 flex border-b border-slate-700">
         <button 
           onClick={() => setActiveTab('registrations')} 
-          className={`px-4 py-2 font-semibold transition-colors ${activeTab === 'registrations' ? 'text-violet-400 border-b-2 border-violet-400' : 'text-slate-400 hover:text-white'}`}
+          disabled={!player}
+          className={`px-4 py-2 font-semibold transition-colors ${activeTab === 'registrations' ? 'text-violet-400 border-b-2 border-violet-400' : 'text-slate-400 hover:text-white'} disabled:text-slate-600 disabled:cursor-not-allowed`}
           aria-current={activeTab === 'registrations'}
         >
           Mis Inscripciones
@@ -120,7 +96,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tournamentsToShow.map(t => {
-              const registration = activeTab === 'registrations' ? registrations.find(r => r.tournamentId === t.id && r.player1Id === player.id) : null;
+              const registration = activeTab === 'registrations' && player ? registrations.find(r => r.tournamentId === t.id && r.player1Id === player.id) : null;
               return (
                 <div key={t.id} className="bg-slate-800/50 rounded-xl shadow-lg ring-1 ring-white/10 flex flex-col transition-all duration-300 hover:scale-[1.02] hover:shadow-violet-500/10">
                   {t.posterImage ? (
@@ -173,7 +149,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
         )}
       </section>
 
-      {selectedTournament && (
+      {selectedTournament && player && (
         <Modal isOpen={!!selectedTournament} onClose={handleCloseModal} size="2xl">
           <RegistrationModal 
             player={player}
@@ -183,14 +159,6 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({
           />
         </Modal>
       )}
-
-      <Modal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} size="md">
-          <ProfileModal 
-            player={player}
-            onClose={() => setIsProfileModalOpen(false)}
-            onSave={handleProfileSave}
-          />
-      </Modal>
     </div>
   );
 };
