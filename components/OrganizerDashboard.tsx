@@ -3,13 +3,13 @@ import type { Tournament, TournamentStatus, Registration, Player } from '../type
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { Modal } from './Modal';
-import { TournamentForm } from './TournamentForm';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { LocationIcon } from './icons/LocationIcon';
 import { UsersIcon } from './icons/UsersIcon';
 import { ClipboardListIcon } from './icons/ClipboardListIcon';
 import { LockClosedIcon } from './icons/LockClosedIcon';
 import { RegistrationsModal } from './RegistrationsModal';
+import { PencilIcon } from './icons/PencilIcon';
 
 
 interface OrganizerDashboardProps {
@@ -18,7 +18,8 @@ interface OrganizerDashboardProps {
   registrations: Registration[];
   players: Player[];
   onUpdateTournamentStatus: (tournamentId: string, newStatus: TournamentStatus) => void;
-  onCreateTournament: (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => void;
+  onCreateTournamentRequest: () => void;
+  onEditTournament: (tournament: Tournament) => void;
   onViewTournament: (tournamentId: string) => void;
   onViewPlayer: (playerId: string) => void;
   onDeleteRegistration: (registrationId: string) => void;
@@ -37,14 +38,8 @@ const formatDateRange = (start: string, end: string) => {
     return `${startDate.toLocaleDateString('es-ES')} - ${endDate.toLocaleDateString('es-ES')}`;
 }
 
-export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onUpdateTournamentStatus, onCreateTournament, onViewTournament, onViewPlayer, onDeleteRegistration }) => {
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, tournaments, registrations, players, onUpdateTournamentStatus, onCreateTournamentRequest, onEditTournament, onViewTournament, onViewPlayer, onDeleteRegistration }) => {
   const [viewingTournament, setViewingTournament] = useState<Tournament | null>(null);
-
-  const handleCreateTournament = (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
-    onCreateTournament(data);
-    setIsFormModalOpen(false);
-  };
 
   const handleViewRegistrations = (tournament: Tournament) => {
     setViewingTournament(tournament);
@@ -72,7 +67,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
             </h1>
         </div>
         <button
-          onClick={() => setIsFormModalOpen(true)}
+          onClick={onCreateTournamentRequest}
           className="flex items-center justify-center gap-2 px-5 py-2.5 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all w-full sm:w-auto"
         >
           <PlusIcon />
@@ -113,15 +108,16 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
                                 <div className="flex items-center gap-1.5"><UsersIcon /> {registrationCount} inscritos</div>
                             </div>
                         </div>
-                        <div className="flex-shrink-0 flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
-                            <button onClick={() => handleViewRegistrations(t)} className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors flex-1"><ClipboardListIcon /> Ver Inscripciones</button>
+                        <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full lg:w-max">
+                            <button onClick={() => onEditTournament(t)} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><PencilIcon /> Editar</button>
+                            <button onClick={() => handleViewRegistrations(t)} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors"><ClipboardListIcon /> Inscripciones</button>
                             <button 
                                 onClick={() => handleCloseRegistrations(t.id)} 
                                 disabled={t.status !== 'OPEN'}
-                                className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors flex-1 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
+                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold bg-slate-700 hover:bg-slate-600 rounded-md transition-colors sm:col-span-2 lg:col-span-1 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
                             >
                                 <LockClosedIcon /> 
-                                {t.status === 'OPEN' ? 'Cerrar Inscripciones' : 'Inscripciones Cerradas'}
+                                {t.status === 'OPEN' ? 'Cerrar' : 'Cerrado'}
                             </button>
                         </div>
                     </div>
@@ -129,13 +125,6 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ onBack, 
             })}
         </div>
       </section>
-
-      <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} size="3xl">
-        <TournamentForm 
-            onSubmit={handleCreateTournament}
-            onCancel={() => setIsFormModalOpen(false)}
-        />
-      </Modal>
 
       {viewingTournament && (
         <Modal isOpen={!!viewingTournament} onClose={handleCloseRegistrationsModal} size="2xl">

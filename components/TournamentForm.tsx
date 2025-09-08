@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Tournament, Category } from '../types';
 import { ALL_CATEGORIES } from '../constants';
 
 interface TournamentFormProps {
   onSubmit: (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => void;
   onCancel: () => void;
+  initialData?: Tournament | null;
 }
 
-export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCancel }) => {
+export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCancel, initialData }) => {
+  const isEditing = !!initialData;
   const [name, setName] = useState('');
   const [clubName, setClubName] = useState('');
   const [description, setDescription] = useState('');
@@ -20,6 +22,37 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   const [feminineCategories, setFeminineCategories] = useState<Set<Category>>(new Set());
   const [posterImagePreview, setPosterImagePreview] = useState<string | null>(null);
   const [posterImageFile, setPosterImageFile] = useState<File | null>(null);
+  
+  useEffect(() => {
+    if (initialData) {
+        setName(initialData.name);
+        setClubName(initialData.clubName);
+        setDescription(initialData.description);
+        setInscriptionStartDate(initialData.inscriptionStartDate);
+        setStartDate(initialData.startDate);
+        setEndDate(initialData.endDate);
+        setContactPhone(initialData.contactPhone);
+        setContactEmail(initialData.contactEmail);
+        setMasculineCategories(new Set(initialData.categories.masculine));
+        setFeminineCategories(new Set(initialData.categories.feminine));
+        setPosterImagePreview(initialData.posterImage);
+        setPosterImageFile(null);
+    } else {
+        // Reset form for creation
+        setName('');
+        setClubName('');
+        setDescription('');
+        setInscriptionStartDate('');
+        setStartDate('');
+        setEndDate('');
+        setContactPhone('');
+        setContactEmail('');
+        setMasculineCategories(new Set());
+        setFeminineCategories(new Set());
+        setPosterImagePreview(null);
+        setPosterImageFile(null);
+    }
+  }, [initialData]);
 
   const handleCategoryChange = (category: Category, gender: 'masculine' | 'feminine') => {
     const setCategories = gender === 'masculine' ? setMasculineCategories : setFeminineCategories;
@@ -76,7 +109,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <h2 id="modal-title" className="text-2xl font-bold text-white">
-        Crear Nuevo Torneo
+        {isEditing ? 'Editar Torneo' : 'Crear Nuevo Torneo'}
       </h2>
       
       <div>
@@ -242,7 +275,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({ onSubmit, onCanc
           Cancelar
         </button>
         <button type="submit" className="px-6 py-2 font-semibold text-white bg-cyan-600 rounded-lg shadow-md hover:bg-cyan-700 transition-all">
-          Guardar Torneo
+          {isEditing ? 'Guardar Cambios' : 'Guardar Torneo'}
         </button>
       </div>
     </form>

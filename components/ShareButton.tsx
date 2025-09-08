@@ -11,10 +11,10 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ tournament, className 
   const [feedback, setFeedback] = useState('');
 
   const handleShare = async () => {
-    // Construct a clean URL without query params for sharing
-    const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+    // Construct the unique tournament URL using the hash
+    const tournamentUrl = `${window.location.origin}${window.location.pathname}#/tournament/${tournament.id}`;
     const text = `¡Mira este torneo de pádel: ${tournament.name}! Se celebra en ${tournament.clubName}.`;
-    const shareData = { title: tournament.name, text, url: cleanUrl };
+    const shareData = { title: tournament.name, text, url: tournamentUrl };
 
     if (navigator.share) {
         try {
@@ -24,7 +24,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ tournament, className 
         }
     } else {
         try {
-            await navigator.clipboard.writeText(cleanUrl);
+            await navigator.clipboard.writeText(tournamentUrl);
             setFeedback('¡Copiado!');
             setTimeout(() => setFeedback(''), 2000);
         } catch (error) {

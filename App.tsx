@@ -11,6 +11,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { Header } from './components/Header';
 import { Modal } from './components/Modal';
 import { PlayerProfileDetailModal } from './components/PlayerProfileDetailModal';
+import { TournamentForm } from './components/TournamentForm';
 
 type AppView = 'organizer' | 'player' | 'tournamentDetail';
 
@@ -25,13 +26,17 @@ const App: React.FC = () => {
     // Determines dashboard view for organizer_player role
     const [organizerPlayerView, setOrganizerPlayerView] = useState<'player' | 'organizer'>('player'); 
 
-    const [currentView, setCurrentView] = useState<AppView>('player'); // start with player view to show tournaments
+    const [currentView, setCurrentView] = useState<AppView>('player');
     const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
 
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authRole, setAuthRole] = useState<'player' | 'organizer'>('player');
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
+    
+    const [isTournamentFormOpen, setIsTournamentFormOpen] = useState(false);
+    const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
@@ -42,15 +47,6 @@ const App: React.FC = () => {
                 if (playerDoc.exists) {
                     const playerData = { id: playerDoc.id, ...playerDoc.data() } as Player;
                     setPlayer(playerData);
-                    // if user is organizer or organizer_player default to organizer view
-                    if (playerData.role === 'organizer') {
-                        setCurrentView('organizer');
-                    } else if (playerData.role === 'organizer_player') {
-                        setCurrentView(organizerPlayerView);
-                    }
-                    else {
-                        setCurrentView('player');
-                    }
                 } else {
                     // First login, create a profile
                     const newPlayer: Player = {
@@ -63,17 +59,15 @@ const App: React.FC = () => {
                     await db.collection('players').doc(authUser.uid).set(newPlayer);
                     setPlayer(newPlayer);
                     setIsProfileModalOpen(true); // Prompt user to complete profile
-                    setCurrentView('player');
                 }
             } else {
                 setUser(null);
                 setPlayer(null);
-                setCurrentView('player'); // Show player dashboard with public tournaments for guests
             }
             setLoading(false);
         });
         return () => unsubscribe();
-    }, [authRole, organizerPlayerView]);
+    }, [authRole]);
 
     useEffect(() => {
         const unsubTournaments = db.collection('tournaments').orderBy('startDate', 'desc').onSnapshot(snapshot => {
@@ -93,14 +87,52 @@ const App: React.FC = () => {
         };
     }, []);
 
+    // Effect for hash-based routing
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            const tournamentMatch = hash.match(/^#\/tournament\/([\w-]+)$/);
+
+            if (tournamentMatch && tournamentMatch[1]) {
+                const tournamentId = tournamentMatch[1];
+                // Wait until tournaments are loaded before trying to find one
+                if (tournaments.length > 0) {
+                    const tournament = tournaments.find(t => t.id === tournamentId);
+                    if (tournament) {
+                        setSelectedTournament(tournament);
+                        setCurrentView('tournamentDetail');
+                    } else {
+                        // Tournament not found, navigate back to dashboard
+                        console.warn(`Tournament with ID ${tournamentId} not found.`);
+                        window.location.hash = '';
+                    }
+                }
+            } else {
+                setSelectedTournament(null);
+                // Determine which dashboard to show based on role and view preference
+                if (player?.role === 'organizer' || (player?.role === 'organizer_player' && organizerPlayerView === 'organizer')) {
+                    setCurrentView('organizer');
+                } else {
+                    setCurrentView('player');
+                }
+            }
+        };
+
+        handleHashChange();
+        window.addEventListener('hashchange', handleHashChange);
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
+    }, [tournaments, player, organizerPlayerView]);
+
     const handleLoginRequest = (role: 'player' | 'organizer') => {
         setAuthRole(role);
         setIsAuthModalOpen(true);
     };
 
     const handleLogout = () => {
+        window.location.hash = ''; // Go back to main page
         auth.signOut();
-        setSelectedTournament(null);
     };
     
     const handleAuthSuccess = () => {
@@ -157,6 +189,56 @@ const App: React.FC = () => {
         }
     };
     
+    const handleUpdateTournament = async (tournamentId: string, data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
+        if (!user || player?.role === 'player') return;
+
+        try {
+            let posterImageUrl: string | null = editingTournament?.posterImage || null; // Keep old image by default
+            const { posterImageFile, ...tournamentData } = data;
+
+            if (posterImageFile) { // If a new image is uploaded
+                const storageRef = storage.ref(`posters/${tournamentId}`);
+                const snapshot = await storageRef.put(posterImageFile);
+                posterImageUrl = await snapshot.ref.getDownloadURL();
+            }
+
+            const updatedTournament = {
+                ...tournamentData,
+                posterImage: posterImageUrl,
+            };
+
+            await db.collection('tournaments').doc(tournamentId).update(updatedTournament);
+            alert('Torneo actualizado con éxito.');
+        } catch (error) {
+            console.error("Error al actualizar el torneo:", error);
+            alert("Error al actualizar el torneo. Por favor, inténtalo de nuevo.");
+        }
+    };
+    
+    const handleOpenCreateForm = () => {
+        setEditingTournament(null);
+        setIsTournamentFormOpen(true);
+    };
+
+    const handleOpenEditForm = (tournament: Tournament) => {
+        setEditingTournament(tournament);
+        setIsTournamentFormOpen(true);
+    };
+
+    const handleCloseForm = () => {
+        setIsTournamentFormOpen(false);
+        setEditingTournament(null);
+    };
+    
+    const handleTournamentFormSubmit = async (data: Omit<Tournament, 'id' | 'status' | 'posterImage'> & { posterImageFile?: File | null }) => {
+        if (editingTournament) {
+            await handleUpdateTournament(editingTournament.id, data);
+        } else {
+            await handleCreateTournament(data);
+        }
+        handleCloseForm();
+    };
+
     const handleUpdateTournamentStatus = async (tournamentId: string, newStatus: TournamentStatus) => {
         await db.collection('tournaments').doc(tournamentId).update({ status: newStatus });
     }
@@ -231,11 +313,7 @@ const App: React.FC = () => {
     };
 
     const handleViewTournament = (tournamentId: string) => {
-        const tournament = tournaments.find(t => t.id === tournamentId);
-        if(tournament) {
-            setSelectedTournament(tournament);
-            setCurrentView('tournamentDetail');
-        }
+        window.location.hash = `#/tournament/${tournamentId}`;
     };
     
     const handleViewPlayerProfile = (playerId: string) => {
@@ -246,19 +324,14 @@ const App: React.FC = () => {
     };
 
     const navigateBack = () => {
-        setSelectedTournament(null);
-        // Determine where to go back to
-        if(player?.role === 'organizer' || (player?.role === 'organizer_player' && organizerPlayerView === 'organizer')) {
-            setCurrentView('organizer');
-        } else {
-            setCurrentView('player');
-        }
+        window.location.hash = '';
     }
 
     const handleViewChange = (view: 'player' | 'organizer') => {
+        if (window.location.hash) {
+            window.location.hash = '';
+        }
         setOrganizerPlayerView(view);
-        setCurrentView(view);
-        setSelectedTournament(null);
     }
 
     const renderContent = () => {
@@ -288,7 +361,8 @@ const App: React.FC = () => {
                     registrations={registrations}
                     players={allPlayers}
                     onUpdateTournamentStatus={handleUpdateTournamentStatus}
-                    onCreateTournament={handleCreateTournament}
+                    onCreateTournamentRequest={handleOpenCreateForm}
+                    onEditTournament={handleOpenEditForm}
                     onViewTournament={handleViewTournament}
                     onViewPlayer={handleViewPlayerProfile}
                     onDeleteRegistration={handleDeleteRegistration}
@@ -347,6 +421,14 @@ const App: React.FC = () => {
                     <PlayerProfileDetailModal player={viewingPlayer} onClose={() => setViewingPlayer(null)} />
                 </Modal>
             )}
+            
+            <Modal isOpen={isTournamentFormOpen} onClose={handleCloseForm} size="3xl">
+                <TournamentForm 
+                    onSubmit={handleTournamentFormSubmit}
+                    onCancel={handleCloseForm}
+                    initialData={editingTournament}
+                />
+            </Modal>
         </div>
     );
 };
