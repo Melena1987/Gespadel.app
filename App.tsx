@@ -16,6 +16,8 @@ import { TournamentForm } from './components/TournamentForm';
 import { useNotification } from './components/notifications/NotificationContext';
 import { NotificationContainer } from './components/notifications/NotificationContainer';
 import { ConfirmationModal } from './components/ConfirmationModal';
+import { CookieConsent } from './components/CookieConsent';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
 
 type AppView = 'organizer' | 'player' | 'tournamentDetail';
 
@@ -44,7 +46,19 @@ const App: React.FC = () => {
 
     const [registrationToCancel, setRegistrationToCancel] = useState<string | null>(null);
     const [tournamentToClose, setTournamentToClose] = useState<string | null>(null);
+    const [showCookieConsent, setShowCookieConsent] = useState(false);
+    const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
+
+    useEffect(() => {
+        const consent = localStorage.getItem('cookieConsent');
+        if (consent !== 'true') {
+            const timer = setTimeout(() => {
+                setShowCookieConsent(true);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
@@ -389,6 +403,12 @@ const App: React.FC = () => {
         setOrganizerPlayerView(view);
     }
 
+    const handleAcceptCookies = () => {
+        localStorage.setItem('cookieConsent', 'true');
+        setShowCookieConsent(false);
+        addNotification('Preferencias de cookies guardadas.', 'success');
+    };
+
     const renderContent = () => {
         if (loading) {
             return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Cargando...</div>;
@@ -505,6 +525,17 @@ const App: React.FC = () => {
                 confirmText="Cerrar Inscripciones"
                 confirmButtonClass="bg-orange-600 hover:bg-orange-700"
             />
+
+            <Modal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} size="3xl">
+                <PrivacyPolicyModal onClose={() => setIsPrivacyModalOpen(false)} />
+            </Modal>
+            
+            {showCookieConsent && (
+                <CookieConsent 
+                    onAccept={handleAcceptCookies}
+                    onOpenPrivacyPolicy={() => setIsPrivacyModalOpen(true)}
+                />
+            )}
         </div>
     );
 };
