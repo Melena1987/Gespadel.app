@@ -142,29 +142,32 @@ export const TournamentDetailPage: React.FC<TournamentDetailPageProps> = ({ tour
                 }
             </div>
 
-            <div className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-3">Descripción</h2>
-                <p className="text-slate-400 whitespace-pre-line">{tournament.description}</p>
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8">
+                <div className="space-y-8">
+                    <div>
+                        <h2 className="text-xl font-bold text-white mb-3">Descripción</h2>
+                        <p className="text-slate-400 whitespace-pre-line">{tournament.description}</p>
+                    </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div className="mb-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Categorías</h2>
-                    <div className="space-y-4">
-                        {tournament.categories.masculine.length > 0 && (
-                            <div>
-                                <h3 className="font-semibold text-cyan-400 mb-2">Masculinas</h3>
-                                <div className="flex flex-wrap gap-2">{tournament.categories.masculine.map(cat => <CategoryPill key={`m-${cat}`} category={cat} gender="masculine" />)}</div>
-                            </div>
-                        )}
-                        {tournament.categories.feminine.length > 0 && (
-                            <div>
-                                <h3 className="font-semibold text-pink-400 mb-2">Femeninas</h3>
-                                <div className="flex flex-wrap gap-2">{tournament.categories.feminine.map(cat => <CategoryPill key={`f-${cat}`} category={cat} gender="feminine" />)}</div>
-                            </div>
-                        )}
+                    <div>
+                        <h2 className="text-xl font-bold text-white mb-4">Categorías</h2>
+                        <div className="space-y-4">
+                            {tournament.categories.masculine.length > 0 && (
+                                <div>
+                                    <h3 className="font-semibold text-cyan-400 mb-2">Masculinas</h3>
+                                    <div className="flex flex-wrap gap-2">{tournament.categories.masculine.map(cat => <CategoryPill key={`m-${cat}`} category={cat} gender="masculine" />)}</div>
+                                </div>
+                            )}
+                            {tournament.categories.feminine.length > 0 && (
+                                <div>
+                                    <h3 className="font-semibold text-pink-400 mb-2">Femeninas</h3>
+                                    <div className="flex flex-wrap gap-2">{tournament.categories.feminine.map(cat => <CategoryPill key={`f-${cat}`} category={cat} gender="feminine" />)}</div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
+
                 <div className="space-y-8">
                     {tournament.rulesPdfUrl && (
                         <div>
